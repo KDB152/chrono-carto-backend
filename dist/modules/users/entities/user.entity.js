@@ -26,21 +26,25 @@ __decorate([
     __metadata("design:type", Number)
 ], User.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ unique: true }),
+    (0, typeorm_1.Column)({ unique: true, length: 255 }),
     __metadata("design:type", String)
 ], User.prototype, "email", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ name: 'password_hash', length: 255 }),
     __metadata("design:type", String)
 ], User.prototype, "password_hash", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({ name: 'first_name', length: 100, nullable: true }),
     __metadata("design:type", String)
 ], User.prototype, "first_name", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({ name: 'last_name', length: 100, nullable: true }),
     __metadata("design:type", String)
 ], User.prototype, "last_name", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ length: 20, nullable: true }),
+    __metadata("design:type", String)
+], User.prototype, "phone", void 0);
 __decorate([
     (0, typeorm_1.Column)({
         type: 'enum',
@@ -50,67 +54,55 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "role", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ default: false }),
+    (0, typeorm_1.Column)({ name: 'is_active', default: true }),
     __metadata("design:type", Boolean)
 ], User.prototype, "is_active", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ default: false }),
+    (0, typeorm_1.Column)({ name: 'email_verified', default: false }),
     __metadata("design:type", Boolean)
 ], User.prototype, "email_verified", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({ name: 'verification_token', length: 255, nullable: true }),
     __metadata("design:type", String)
 ], User.prototype, "verification_token", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true, type: 'timestamp' }),
+    (0, typeorm_1.Column)({ name: 'verification_token_expiry', type: 'datetime', nullable: true }),
     __metadata("design:type", Date)
 ], User.prototype, "verification_token_expiry", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({ name: 'email_verification_code', length: 6, nullable: true }),
     __metadata("design:type", String)
-], User.prototype, "verification_code", void 0);
+], User.prototype, "email_verification_code", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true, type: 'timestamp' }),
+    (0, typeorm_1.Column)({ name: 'email_verification_code_expiry', type: 'datetime', nullable: true }),
     __metadata("design:type", Date)
-], User.prototype, "verification_code_expiry", void 0);
+], User.prototype, "email_verification_code_expiry", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true, type: 'timestamp' }),
-    __metadata("design:type", Date)
-], User.prototype, "email_verified_at", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({ name: 'password_reset_token', length: 255, nullable: true }),
     __metadata("design:type", String)
 ], User.prototype, "password_reset_token", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true, type: 'timestamp' }),
+    (0, typeorm_1.Column)({ name: 'password_reset_token_expiry', type: 'datetime', nullable: true }),
     __metadata("design:type", Date)
 ], User.prototype, "password_reset_token_expiry", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({ name: 'password_reset_code', length: 6, nullable: true }),
     __metadata("design:type", String)
 ], User.prototype, "password_reset_code", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true, type: 'timestamp' }),
+    (0, typeorm_1.Column)({ name: 'password_reset_code_expiry', type: 'datetime', nullable: true }),
     __metadata("design:type", Date)
 ], User.prototype, "password_reset_code_expiry", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", String)
-], User.prototype, "reset_token", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ nullable: true, type: 'timestamp' }),
-    __metadata("design:type", Date)
-], User.prototype, "reset_token_expires", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ nullable: true, type: 'timestamp' }),
+    (0, typeorm_1.Column)({ name: 'last_login', type: 'datetime', nullable: true }),
     __metadata("design:type", Date)
 ], User.prototype, "last_login", void 0);
 __decorate([
-    (0, typeorm_1.CreateDateColumn)({ type: 'timestamp' }),
+    (0, typeorm_1.CreateDateColumn)({ name: 'created_at' }),
     __metadata("design:type", Date)
 ], User.prototype, "created_at", void 0);
 __decorate([
-    (0, typeorm_1.UpdateDateColumn)({ type: 'timestamp' }),
+    (0, typeorm_1.UpdateDateColumn)({ name: 'updated_at' }),
     __metadata("design:type", Date)
 ], User.prototype, "updated_at", void 0);
 exports.User = User = __decorate([

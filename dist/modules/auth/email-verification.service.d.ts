@@ -1,27 +1,23 @@
-import { OnModuleInit } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
-export declare class EmailVerificationService implements OnModuleInit {
+export declare class EmailVerificationService {
     private userRepository;
     private readonly logger;
     private transporter;
-    private isConfigured;
-    jwtService: any;
-    usersService: any;
     constructor(userRepository: Repository<User>);
-    onModuleInit(): Promise<void>;
-    private initializeTransporter;
-    private checkEmailConfiguration;
+    private verifyEmailConfig;
     sendVerificationCode(email: string): Promise<{
         message: string;
     }>;
     verifyCode(email: string, code: string): Promise<{
         message: string;
+        email: string;
     }>;
     sendVerificationLink(email: string): Promise<{
         message: string;
     }>;
     verifyToken(token: string): Promise<{
+        message: string;
         email: string;
     }>;
     sendPasswordResetCode(email: string): Promise<{
@@ -29,29 +25,11 @@ export declare class EmailVerificationService implements OnModuleInit {
     }>;
     verifyPasswordResetCode(email: string, code: string): Promise<{
         message: string;
-        token: string;
+        resetToken: string;
     }>;
     sendPasswordResetLink(email: string): Promise<{
         message: string;
     }>;
-    private sendEmail;
-    private getVerificationCodeEmailTemplate;
-    private getVerificationLinkEmailTemplate;
-    private getPasswordResetCodeEmailTemplate;
-    private getPasswordResetLinkEmailTemplate;
-    getEmailConfiguration(): Promise<{
-        isConfigured: boolean;
-        emailUser: string;
-        frontendUrl: string;
-        hasPassword: boolean;
-    }>;
-    testEmailConnection(): Promise<{
-        success: boolean;
-        message: string;
-        error?: undefined;
-    } | {
-        success: boolean;
-        error: any;
-        message?: undefined;
-    }>;
+    private sendVerificationCodeEmail;
+    private sendPasswordResetCodeEmail;
 }

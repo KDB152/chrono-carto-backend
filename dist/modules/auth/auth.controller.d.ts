@@ -31,11 +31,13 @@ export declare class AuthController {
     }>;
     verifyCode(dto: VerifyCodeDto): Promise<{
         message: string;
+        email: string;
     }>;
     sendVerificationLink(dto: SendVerificationCodeDto): Promise<{
         message: string;
     }>;
     verifyToken(dto: VerifyTokenDto): Promise<{
+        message: string;
         email: string;
     }>;
     sendPasswordResetCode(dto: SendPasswordResetDto): Promise<{
@@ -43,7 +45,7 @@ export declare class AuthController {
     }>;
     verifyPasswordResetCode(dto: VerifyPasswordResetCodeDto): Promise<{
         message: string;
-        token: string;
+        resetToken: string;
     }>;
     sendPasswordResetLink(dto: SendPasswordResetDto): Promise<{
         message: string;

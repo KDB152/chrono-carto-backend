@@ -1,11 +1,5 @@
-// src/modules/users/entities/user.entity.ts
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
+// src/modules/users/entities/user.entity.ts (VERSION COMPLÈTE)
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 export enum UserRole {
   STUDENT = 'student',
@@ -19,17 +13,20 @@ export class User {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
+  @Column({ unique: true, length: 255 })
   email: string;
 
-  @Column()
+  @Column({ name: 'password_hash', length: 255 })
   password_hash: string;
 
-  @Column({ nullable: true })
-  first_name?: string;
+  @Column({ name: 'first_name', length: 100, nullable: true })
+  first_name: string;
 
-  @Column({ nullable: true })
-  last_name?: string;
+  @Column({ name: 'last_name', length: 100, nullable: true })
+  last_name: string;
+
+  @Column({ length: 20, nullable: true })
+  phone: string;
 
   @Column({
     type: 'enum',
@@ -38,52 +35,46 @@ export class User {
   })
   role: UserRole;
 
-  @Column({ default: false })
+  @Column({ name: 'is_active', default: true })
   is_active: boolean;
 
-  @Column({ default: false })
+  // ✅ CHAMPS POUR VÉRIFICATION EMAIL
+  @Column({ name: 'email_verified', default: false })
   email_verified: boolean;
 
-  @Column({ nullable: true })
-  verification_token?: string;
+  @Column({ name: 'verification_token', length: 255, nullable: true })
+  verification_token: string | null;
 
-  @Column({ nullable: true, type: 'timestamp' })
-  verification_token_expiry?: Date;
+  @Column({ name: 'verification_token_expiry', type: 'datetime', nullable: true })
+  verification_token_expiry: Date | null;
 
-  @Column({ nullable: true })
-  verification_code?: string;
+  @Column({ name: 'email_verification_code', length: 6, nullable: true })
+  email_verification_code: string | null;
 
-  @Column({ nullable: true, type: 'timestamp' })
-  verification_code_expiry?: Date;
+  @Column({ name: 'email_verification_code_expiry', type: 'datetime', nullable: true })
+  email_verification_code_expiry: Date | null;
 
-  @Column({ nullable: true, type: 'timestamp' })
-  email_verified_at?: Date;
+  // ✅ CHAMPS POUR RÉINITIALISATION MOT DE PASSE
+  @Column({ name: 'password_reset_token', length: 255, nullable: true })
+  password_reset_token: string | null;
 
-  @Column({ nullable: true })
-  password_reset_token?: string;
+  @Column({ name: 'password_reset_token_expiry', type: 'datetime', nullable: true })
+  password_reset_token_expiry: Date | null;
 
-  @Column({ nullable: true, type: 'timestamp' })
-  password_reset_token_expiry?: Date;
+  @Column({ name: 'password_reset_code', length: 6, nullable: true })
+  password_reset_code: string | null;
 
-  @Column({ nullable: true })
-  password_reset_code?: string;
+  @Column({ name: 'password_reset_code_expiry', type: 'datetime', nullable: true })
+  password_reset_code_expiry: Date | null;
 
-  @Column({ nullable: true, type: 'timestamp' })
-  password_reset_code_expiry?: Date;
+  // ✅ CHAMPS SYSTÈME
+  @Column({ name: 'last_login', type: 'datetime', nullable: true })
+  last_login: Date | null;
 
-  @Column({ nullable: true })
-  reset_token?: string;
-
-  @Column({ nullable: true, type: 'timestamp' })
-  reset_token_expires?: Date;
-
-  @Column({ nullable: true, type: 'timestamp' })
-  last_login?: Date;
-
-  @CreateDateColumn({ type: 'timestamp' })
+  @CreateDateColumn({ name: 'created_at' })
   created_at: Date;
 
-  @UpdateDateColumn({ type: 'timestamp' })
+  @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
   student: any;
 }
