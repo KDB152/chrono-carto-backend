@@ -18,6 +18,9 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const parent_entity_1 = require("./entities/parent.entity");
 let ParentsService = class ParentsService {
+    async findByUserId(userId) {
+        return this.parentsRepository.findOne({ where: { user: { id: userId } } });
+    }
     constructor(parentsRepository) {
         this.parentsRepository = parentsRepository;
     }

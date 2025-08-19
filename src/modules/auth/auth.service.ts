@@ -99,15 +99,32 @@ export class AuthService {
     const payload = { email: user.email, sub: user.id, role: user.role };
     const accessToken = this.jwtService.sign(payload);
 
+    let userDetails: any = {
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      firstName: user.first_name,
+      lastName: user.last_name,
+    };
+
+    if (user.role === UserRole.STUDENT) {
+      const student = await this.studentsService.findByUserId(user.id);
+      if (student !== undefined && student !== null) {
+        userDetails = { ...userDetails, studentDetails: student };
+      }
+    } else if (user.role === UserRole.PARENT) {
+      const parent = await this.parentsService.findByUserId(user.id);
+      if (parent !== undefined && parent !== null) {
+        userDetails = { ...userDetails, parentDetails: parent };
+      }
+    } else if (user.role === UserRole.ADMIN) {
+      // No specific admin details to fetch from a separate service, 
+      // but you could add them here if needed.
+    }
+
     return {
       accessToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        role: user.role,
-        firstName: user.first_name,
-        lastName: user.last_name,
-      },
+      user: userDetails,
     };
   }
 

@@ -6,6 +6,9 @@ import { Student } from './entities/student.entity';
 
 @Injectable()
 export class StudentsService {
+  async findByUserId(userId: number): Promise<Student | null> {
+    return this.studentsRepository.findOne({ where: { user: { id: userId } } });
+  }
   constructor(
     @InjectRepository(Student)
     private studentsRepository: Repository<Student>,
