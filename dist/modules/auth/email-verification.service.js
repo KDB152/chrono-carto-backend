@@ -164,18 +164,18 @@ let EmailVerificationService = EmailVerificationService_1 = class EmailVerificat
     async sendPasswordResetLink(email) {
         const user = await this.userRepository.findOne({ where: { email } });
         if (!user) {
-            this.logger.log(`Tentative de reset pour email inexistant: ${email}`);
-            return { message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé' };
+            throw new common_1.NotFoundException('Utilisateur non trouvé');
         }
         const resetToken = (0, uuid_1.v4)();
-        const expiryTime = new Date();
-        expiryTime.setHours(expiryTime.getHours() + 1);
+        const resetTokenExpiry = new Date(Date.now() + 3600000);
         user.password_reset_token = resetToken;
-        user.password_reset_token_expiry = expiryTime;
+        user.password_reset_token_expiry = resetTokenExpiry;
         await this.userRepository.save(user);
-        await (0, email_util_1.sendPasswordResetEmail)(email, resetToken);
-        this.logger.log(`✅ Lien de réinitialisation envoyé à ${email}`);
-        return { message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé' };
+        await this.sendPasswordResetEmailWithToken(email, resetToken);
+        return {
+            success: true,
+            message: 'Un lien de réinitialisation a été envoyé à votre adresse email'
+        };
     }
     async sendVerificationCodeEmail(email, code) {
         const mailOptions = {
@@ -275,6 +275,66 @@ let EmailVerificationService = EmailVerificationService_1 = class EmailVerificat
         catch (error) {
             this.logger.error(`❌ Erreur envoi code reset à ${email}:`, error);
             throw new common_1.HttpException('Erreur lors de l\'envoi de l\'email', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    async sendPasswordResetEmailWithToken(email, token) {
+        const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${token}`;
+        const mailOptions = {
+            from: `"Chrono Carto" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: 'Réinitialisation de votre mot de passe - Chrono Carto',
+            html: `
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Réinitialisation mot de passe - Chrono Carto</title>
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: #f8f9fa; padding: 30px; border-radius: 10px; text-align: center;">
+          <h1 style="color: #dc2626; margin-bottom: 30px;">🔒 Réinitialisation de mot de passe</h1>
+          
+          <p style="font-size: 16px; margin-bottom: 30px;">
+            Vous avez demandé à réinitialiser votre mot de passe sur Chrono-Carto.
+            Cliquez sur le bouton ci-dessous pour continuer.
+          </p>
+          
+          <div style="margin: 40px 0;">
+            <a href="${resetUrl}" 
+               style="display: inline-block; background: #dc2626; color: white; padding: 15px 30px; 
+                      text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px;">
+              🔑 Réinitialiser mon mot de passe
+            </a>
+          </div>
+          
+          <p style="font-size: 14px; color: #f59e0b; background: #fef3c7; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            ⏰ <strong>Ce lien expirera dans 1 heure</strong>
+          </p>
+          
+          <p style="font-size: 14px; color: #666; margin-top: 30px;">
+            Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :<br>
+            <a href="${resetUrl}" style="color: #dc2626; word-break: break-all;">${resetUrl}</a>
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+          
+          <p style="font-size: 12px; color: #888;">
+            Si vous n'avez pas demandé de réinitialisation, veuillez ignorer cet email.<br>
+            Votre mot de passe restera inchangé.
+          </p>
+        </div>
+      </body>
+      </html>
+    `,
+        };
+        try {
+            await this.transporter.sendMail(mailOptions);
+            console.log(`✅ Email de réinitialisation envoyé à ${email}`);
+        }
+        catch (error) {
+            console.error(`❌ Erreur d'envoi email de réinitialisation à ${email}:`, error);
+            throw new common_1.HttpException('Erreur lors de l\'envoi de l\'email de réinitialisation', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 };

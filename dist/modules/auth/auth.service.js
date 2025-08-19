@@ -23,7 +23,6 @@ const user_entity_1 = require("../users/entities/user.entity");
 const email_verification_service_1 = require("./email-verification.service");
 const bcrypt = require("bcrypt");
 const jwt_1 = require("@nestjs/jwt");
-const uuid_1 = require("uuid");
 let AuthService = class AuthService {
     constructor(usersService, studentsService, parentsService, emailVerificationService, userRepository, jwtService) {
         this.usersService = usersService;
@@ -110,14 +109,9 @@ let AuthService = class AuthService {
     async sendResetPasswordEmail(email) {
         const user = await this.findUserByEmail(email);
         if (!user) {
-            return;
+            throw new common_1.NotFoundException('Utilisateur non trouvé');
         }
-        const resetToken = this.generateResetToken();
-        const resetTokenExpiry = new Date(Date.now() + 3600000);
-        user.resetPasswordToken = resetToken;
-        user.resetPasswordExpiry = resetTokenExpiry;
-        await this.userRepository.save(user);
-        await this.emailService.sendResetPasswordEmail(user.email, resetToken);
+        await this.emailVerificationService.sendPasswordResetLink(email);
     }
     generateResetToken() {
         return require('crypto').randomBytes(32).toString('hex');
@@ -137,18 +131,6 @@ let AuthService = class AuthService {
             console.error('Erreur vérification email:', error);
             throw error;
         }
-    }
-    async forgotPassword(email) {
-        const user = await this.userRepository.findOne({ where: { email } });
-        if (!user) {
-            throw new common_1.NotFoundException("User not found");
-        }
-        const resetToken = (0, uuid_1.v4)();
-        user.verification_token = resetToken;
-        user.verification_token_expiry = new Date(Date.now() + 1000 * 60 * 60);
-        await this.userRepository.save(user);
-        await this.emailService.sendPasswordReset(user.email, resetToken);
-        return { message: 'Password reset link sent successfully' };
     }
     async resetPassword(token, newPassword) {
         const user = await this.userRepository.findOne({

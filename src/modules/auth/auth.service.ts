@@ -1,4 +1,4 @@
-// src/modules/auth/auth.service.ts
+// src/modules/auth/auth.service.ts (CORRIGÉ)
 import { Injectable, HttpException, HttpStatus, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -15,12 +15,11 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AuthService {
-  emailService: any;
   constructor(
     private usersService: UsersService,
     private studentsService: StudentsService,
     private parentsService: ParentsService,
-    private emailVerificationService: EmailVerificationService,
+    private emailVerificationService: EmailVerificationService, // ✅ Correctement injecté
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private jwtService: JwtService,
@@ -108,36 +107,27 @@ export class AuthService {
     };
   }
 
-    async findUserByEmail(email: string): Promise<User | null> {
+  async findUserByEmail(email: string): Promise<User | null> {
     return await this.userRepository.findOne({
       where: { email: email.toLowerCase() }
     });
   }
 
+  // ✅ CORRIGÉ : Utiliser EmailVerificationService au lieu d'emailService
   async sendResetPasswordEmail(email: string): Promise<void> {
     const user = await this.findUserByEmail(email);
     
     if (!user) {
-      return; // Ou throw une erreur selon votre logique
+      throw new NotFoundException('Utilisateur non trouvé');
     }
 
-    // Générer le token
-    const resetToken = this.generateResetToken();
-    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 heure
-
-    // Sauvegarder le token dans la DB
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpiry = resetTokenExpiry;
-    await this.userRepository.save(user);
-
-    // Envoyer l'email (implémentez selon votre service email)
-    await this.emailService.sendResetPasswordEmail(user.email, resetToken);
+    // ✅ Utiliser la méthode du EmailVerificationService
+    await this.emailVerificationService.sendPasswordResetLink(email);
   }
 
   private generateResetToken(): string {
     return require('crypto').randomBytes(32).toString('hex');
   }
-
 
   async verifyEmailToken(token: string): Promise<boolean> {
     try {
@@ -155,25 +145,7 @@ export class AuthService {
     }
   }
 
-  async forgotPassword(email: string) {
-  // Vérifie si l'utilisateur existe
-  const user = await this.userRepository.findOne({ where: { email } });
-  if (!user) {
-    throw new NotFoundException("User not found");
-  }
-
-  // Générer un token de reset
-  const resetToken = uuidv4(); // nécessite import { v4 as uuidv4 } from 'uuid';
-  user.verification_token = resetToken;
-  user.verification_token_expiry = new Date(Date.now() + 1000 * 60 * 60); // expire dans 1h
-  await this.userRepository.save(user);
-
-  // Envoi email
-  await this.emailService.sendPasswordReset(user.email, resetToken);
-
-  return { message: 'Password reset link sent successfully' };
-}
-
+  // ✅ SUPPRIMÉ : La méthode forgotPassword en double qui causait confusion
 
   async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
     const user = await this.userRepository.findOne({ 
@@ -203,4 +175,3 @@ export class AuthService {
     return { message: 'Mot de passe réinitialisé avec succès' };
   }
 }
-

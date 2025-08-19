@@ -14,7 +14,6 @@ export declare class AuthService {
     private emailVerificationService;
     private userRepository;
     private jwtService;
-    emailService: any;
     constructor(usersService: UsersService, studentsService: StudentsService, parentsService: ParentsService, emailVerificationService: EmailVerificationService, userRepository: Repository<User>, jwtService: JwtService);
     register(registerDto: RegisterDto): Promise<{
         message: string;
@@ -34,9 +33,6 @@ export declare class AuthService {
     sendResetPasswordEmail(email: string): Promise<void>;
     private generateResetToken;
     verifyEmailToken(token: string): Promise<boolean>;
-    forgotPassword(email: string): Promise<{
-        message: string;
-    }>;
     resetPassword(token: string, newPassword: string): Promise<{
         message: string;
     }>;

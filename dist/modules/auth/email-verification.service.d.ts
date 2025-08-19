@@ -28,8 +28,10 @@ export declare class EmailVerificationService {
         resetToken: string;
     }>;
     sendPasswordResetLink(email: string): Promise<{
+        success: boolean;
         message: string;
     }>;
     private sendVerificationCodeEmail;
     private sendPasswordResetCodeEmail;
+    private sendPasswordResetEmailWithToken;
 }

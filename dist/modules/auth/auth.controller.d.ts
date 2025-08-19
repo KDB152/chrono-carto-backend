@@ -50,6 +50,7 @@ export declare class AuthController {
         resetToken: string;
     }>;
     sendPasswordResetLink(dto: SendPasswordResetDto): Promise<{
+        success: boolean;
         message: string;
     }>;
     resetPassword(dto: ResetPasswordDto): Promise<{
