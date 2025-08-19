@@ -22,6 +22,7 @@ export declare class AuthController {
             role: import("../users/entities/user.entity").UserRole;
             firstName: string;
             lastName: string;
+            profileData?: any;
         };
     }>;
     forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<{

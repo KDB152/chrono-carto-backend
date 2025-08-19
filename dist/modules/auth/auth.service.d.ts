@@ -27,13 +27,23 @@ export declare class AuthService {
             role: UserRole;
             firstName: string;
             lastName: string;
+            profileData?: any;
         };
     }>;
+    private getStudentCourses;
+    private getStudentGrades;
+    private getStudentAttendance;
+    private getParentChildren;
+    private getParentNotifications;
+    private getAdminStats;
+    private getTeacherSubjects;
+    private getTeacherClasses;
+    private getNewUsersThisWeek;
+    private getActiveUsersCount;
     findUserByEmail(email: string): Promise<User | null>;
     sendResetPasswordEmail(email: string): Promise<void>;
-    private generateResetToken;
-    verifyEmailToken(token: string): Promise<boolean>;
     resetPassword(token: string, newPassword: string): Promise<{
         message: string;
     }>;
+    verifyEmailToken(token: string): Promise<boolean>;
 }
