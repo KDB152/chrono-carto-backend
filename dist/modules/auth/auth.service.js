@@ -25,9 +25,6 @@ const bcrypt = require("bcrypt");
 const jwt_1 = require("@nestjs/jwt");
 const uuid_1 = require("uuid");
 let AuthService = class AuthService {
-    findUserByEmail(email) {
-        throw new Error('Method not implemented.');
-    }
     constructor(usersService, studentsService, parentsService, emailVerificationService, userRepository, jwtService) {
         this.usersService = usersService;
         this.studentsService = studentsService;
@@ -104,6 +101,26 @@ let AuthService = class AuthService {
                 lastName: user.last_name,
             },
         };
+    }
+    async findUserByEmail(email) {
+        return await this.userRepository.findOne({
+            where: { email: email.toLowerCase() }
+        });
+    }
+    async sendResetPasswordEmail(email) {
+        const user = await this.findUserByEmail(email);
+        if (!user) {
+            return;
+        }
+        const resetToken = this.generateResetToken();
+        const resetTokenExpiry = new Date(Date.now() + 3600000);
+        user.resetPasswordToken = resetToken;
+        user.resetPasswordExpiry = resetTokenExpiry;
+        await this.userRepository.save(user);
+        await this.emailService.sendResetPasswordEmail(user.email, resetToken);
+    }
+    generateResetToken() {
+        return require('crypto').randomBytes(32).toString('hex');
     }
     async verifyEmailToken(token) {
         try {

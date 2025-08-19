@@ -77,4 +77,6 @@ export class User {
   @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
   student: any;
+  resetPasswordToken: string;
+  resetPasswordExpiry: Date;
 }

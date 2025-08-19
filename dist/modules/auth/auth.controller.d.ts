@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { EmailVerificationService } from './email-verification.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { SendVerificationCodeDto, VerifyCodeDto, VerifyTokenDto, SendPasswordResetDto, VerifyPasswordResetCodeDto, ResetPasswordDto } from './dto/verify-email.dto';
 export declare class AuthController {
     private authService;
@@ -23,7 +24,8 @@ export declare class AuthController {
             lastName: string;
         };
     }>;
-    forgotPassword(dto: SendPasswordResetDto): Promise<{
+    forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<{
+        success: boolean;
         message: string;
     }>;
     sendVerificationCode(dto: SendVerificationCodeDto): Promise<{

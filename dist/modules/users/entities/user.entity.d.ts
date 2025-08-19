@@ -26,4 +26,6 @@ export declare class User {
     created_at: Date;
     updated_at: Date;
     student: any;
+    resetPasswordToken: string;
+    resetPasswordExpiry: Date;
 }

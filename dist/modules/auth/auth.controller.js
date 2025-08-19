@@ -19,6 +19,7 @@ const auth_service_1 = require("./auth.service");
 const email_verification_service_1 = require("./email-verification.service");
 const register_dto_1 = require("./dto/register.dto");
 const login_dto_1 = require("./dto/login.dto");
+const forgot_password_dto_1 = require("./dto/forgot-password.dto");
 const verify_email_dto_1 = require("./dto/verify-email.dto");
 let AuthController = AuthController_1 = class AuthController {
     constructor(authService, emailVerificationService) {
@@ -50,16 +51,31 @@ let AuthController = AuthController_1 = class AuthController {
             throw error;
         }
     }
-    async forgotPassword(dto) {
-        this.logger.log(`Demande de réinitialisation pour: ${dto.email}`);
+    async forgotPassword(forgotPasswordDto) {
         try {
-            const result = await this.emailVerificationService.sendPasswordResetLink(dto.email);
-            this.logger.log(`Réinitialisation traitée pour: ${dto.email}`);
-            return result;
+            const { email } = forgotPasswordDto;
+            const user = await this.authService.findUserByEmail(email);
+            if (!user) {
+                throw new common_1.HttpException({
+                    message: "Cette adresse email n'est pas inscrite dans notre système",
+                    error: "User not found"
+                }, common_1.HttpStatus.NOT_FOUND);
+            }
+            await this.authService.sendResetPasswordEmail(email);
+            return {
+                success: true,
+                message: "Un lien de réinitialisation a été envoyé à votre adresse email"
+            };
         }
         catch (error) {
-            this.logger.error(`Erreur réinitialisation pour ${dto.email}:`, error.message);
-            throw error;
+            if (error instanceof common_1.HttpException) {
+                throw error;
+            }
+            console.error('Erreur forgot-password:', error);
+            throw new common_1.HttpException({
+                message: "Erreur serveur lors de la demande de réinitialisation",
+                error: "Internal server error"
+            }, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
     async sendVerificationCode(dto) {
@@ -276,7 +292,7 @@ __decorate([
     (0, common_1.Post)('forgot-password'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [verify_email_dto_1.SendPasswordResetDto]),
+    __metadata("design:paramtypes", [forgot_password_dto_1.ForgotPasswordDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "forgotPassword", null);
 __decorate([

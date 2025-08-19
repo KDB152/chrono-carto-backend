@@ -15,9 +15,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class AuthService {
-  findUserByEmail(email: string) {
-    throw new Error('Method not implemented.');
-  }
   emailService: any;
   constructor(
     private usersService: UsersService,
@@ -110,6 +107,37 @@ export class AuthService {
       },
     };
   }
+
+    async findUserByEmail(email: string): Promise<User | null> {
+    return await this.userRepository.findOne({
+      where: { email: email.toLowerCase() }
+    });
+  }
+
+  async sendResetPasswordEmail(email: string): Promise<void> {
+    const user = await this.findUserByEmail(email);
+    
+    if (!user) {
+      return; // Ou throw une erreur selon votre logique
+    }
+
+    // Générer le token
+    const resetToken = this.generateResetToken();
+    const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 heure
+
+    // Sauvegarder le token dans la DB
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpiry = resetTokenExpiry;
+    await this.userRepository.save(user);
+
+    // Envoyer l'email (implémentez selon votre service email)
+    await this.emailService.sendResetPasswordEmail(user.email, resetToken);
+  }
+
+  private generateResetToken(): string {
+    return require('crypto').randomBytes(32).toString('hex');
+  }
+
 
   async verifyEmailToken(token: string): Promise<boolean> {
     try {
