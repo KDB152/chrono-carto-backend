@@ -23,7 +23,11 @@ const user_entity_1 = require("../users/entities/user.entity");
 const email_verification_service_1 = require("./email-verification.service");
 const bcrypt = require("bcrypt");
 const jwt_1 = require("@nestjs/jwt");
+const uuid_1 = require("uuid");
 let AuthService = class AuthService {
+    findUserByEmail(email) {
+        throw new Error('Method not implemented.');
+    }
     constructor(usersService, studentsService, parentsService, emailVerificationService, userRepository, jwtService) {
         this.usersService = usersService;
         this.studentsService = studentsService;
@@ -77,10 +81,7 @@ let AuthService = class AuthService {
     }
     async login(loginDto) {
         const { email, password } = loginDto;
-        const user = await this.userRepository.findOne({
-            where: { email },
-            relations: ['student', 'parent']
-        });
+        const user = await this.userRepository.findOne({ where: { email } });
         if (!user) {
             throw new common_1.UnauthorizedException('Email ou mot de passe incorrect');
         }
@@ -91,49 +92,6 @@ let AuthService = class AuthService {
         if (!user.email_verified) {
             throw new common_1.UnauthorizedException('Veuillez vérifier votre email avant de vous connecter');
         }
-        let profileData = null;
-        switch (user.role) {
-            case user_entity_1.UserRole.STUDENT:
-                if (user.student) {
-                    profileData = {
-                        studentId: user.student.id,
-                        phone: user.student.phone,
-                        classLevel: user.student.class_level,
-                        enrollmentDate: user.student.enrollment_date,
-                        currentCourses: await this.getStudentCourses(user.student.id),
-                        grades: await this.getStudentGrades(user.student.id),
-                        attendance: await this.getStudentAttendance(user.student.id)
-                    };
-                }
-                break;
-            case user_entity_1.UserRole.PARENT:
-                if (user.parent) {
-                    profileData = {
-                        parentId: user.parent.id,
-                        phone: user.parent.phone,
-                        children: await this.getParentChildren(user.parent.id),
-                        notifications: await this.getParentNotifications(user.parent.id)
-                    };
-                }
-                break;
-            case user_entity_1.UserRole.ADMIN:
-                profileData = {
-                    adminLevel: 'super_admin',
-                    permissions: ['all'],
-                    systemStats: await this.getAdminStats(),
-                    lastLogin: user.last_login
-                };
-                break;
-            case user_entity_1.UserRole.TEACHER:
-                profileData = {
-                    teacherId: user.id,
-                    subjects: await this.getTeacherSubjects(user.id),
-                    classes: await this.getTeacherClasses(user.id)
-                };
-                break;
-        }
-        user.last_login = new Date();
-        await this.userRepository.save(user);
         const payload = { email: user.email, sub: user.id, role: user.role };
         const accessToken = this.jwtService.sign(payload);
         return {
@@ -144,117 +102,36 @@ let AuthService = class AuthService {
                 role: user.role,
                 firstName: user.first_name,
                 lastName: user.last_name,
-                profileData
             },
         };
     }
-    async getStudentCourses(studentId) {
-        return [
-            { id: 1, title: 'Histoire de France', progress: 75, nextLesson: 'La Révolution' },
-            { id: 2, title: 'Géographie Europe', progress: 60, nextLesson: 'Les climats' },
-            { id: 3, title: 'EMC - Citoyenneté', progress: 85, nextLesson: 'La démocratie' }
-        ];
-    }
-    async getStudentGrades(studentId) {
-        return [
-            { subject: 'Histoire', grade: 16, date: '2025-01-10', quiz: 'La Révolution française' },
-            { subject: 'Géographie', grade: 14, date: '2025-01-08', quiz: 'Les climats européens' },
-            { subject: 'EMC', grade: 18, date: '2025-01-05', quiz: 'La Constitution' }
-        ];
-    }
-    async getStudentAttendance(studentId) {
-        return {
-            totalDays: 120,
-            presentDays: 115,
-            absences: 5,
-            attendanceRate: 95.8
-        };
-    }
-    async getParentChildren(parentId) {
-        return [
-            {
-                id: 1,
-                firstName: 'Lucas',
-                lastName: 'Dupont',
-                class: 'Terminale S',
-                averageGrade: 15.2,
-                lastActivity: '2025-01-15T14:30:00Z'
-            },
-            {
-                id: 2,
-                firstName: 'Emma',
-                lastName: 'Dupont',
-                class: 'Première ES',
-                averageGrade: 16.8,
-                lastActivity: '2025-01-15T16:45:00Z'
+    async verifyEmailToken(token) {
+        try {
+            const { email } = await this.emailVerificationService.verifyToken(token);
+            const user = await this.usersService.findByEmail(email);
+            if (!user) {
+                throw new common_1.HttpException('Utilisateur non trouvé', common_1.HttpStatus.NOT_FOUND);
             }
-        ];
-    }
-    async getParentNotifications(parentId) {
-        return [
-            { type: 'grade', message: 'Nouvelle note en Histoire pour Lucas', date: '2025-01-15' },
-            { type: 'absence', message: 'Emma absente aujourd\'hui', date: '2025-01-14' }
-        ];
-    }
-    async getAdminStats() {
-        const totalUsers = await this.userRepository.count();
-        const totalStudents = await this.userRepository.count({ where: { role: user_entity_1.UserRole.STUDENT } });
-        const totalParents = await this.userRepository.count({ where: { role: user_entity_1.UserRole.PARENT } });
-        const totalTeachers = await this.userRepository.count({ where: { role: user_entity_1.UserRole.TEACHER } });
-        return {
-            totalUsers,
-            totalStudents,
-            totalParents,
-            totalTeachers,
-            newUsersThisWeek: await this.getNewUsersThisWeek(),
-            systemUptime: 99.8,
-            activeUsers: await this.getActiveUsersCount()
-        };
-    }
-    async getTeacherSubjects(teacherId) {
-        return ['Histoire', 'Géographie', 'EMC'];
-    }
-    async getTeacherClasses(teacherId) {
-        return [
-            { name: 'Terminale S1', students: 28 },
-            { name: 'Terminale ES2', students: 25 },
-            { name: 'Première L1', students: 22 }
-        ];
-    }
-    async getNewUsersThisWeek() {
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        return await this.userRepository.count({
-            where: {
-                created_at: {
-                    $gte: oneWeekAgo
-                }
-            }
-        });
-    }
-    async getActiveUsersCount() {
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        return await this.userRepository.count({
-            where: {
-                last_login: {
-                    $gte: oneWeekAgo
-                }
-            }
-        });
-    }
-    async findUserByEmail(email) {
-        return await this.userRepository.findOne({
-            where: { email: email.toLowerCase() },
-            relations: ['student', 'parent']
-        });
-    }
-    async sendResetPasswordEmail(email) {
-        const user = await this.findUserByEmail(email);
-        if (!user) {
-            throw new common_1.NotFoundException('Utilisateur non trouvé');
+            user.email_verified = true;
+            await this.userRepository.save(user);
+            return true;
         }
-        await this.emailVerificationService.sendPasswordResetLink(email);
+        catch (error) {
+            console.error('Erreur vérification email:', error);
+            throw error;
+        }
+    }
+    async forgotPassword(email) {
+        const user = await this.userRepository.findOne({ where: { email } });
+        if (!user) {
+            throw new common_1.NotFoundException("User not found");
+        }
+        const resetToken = (0, uuid_1.v4)();
+        user.verification_token = resetToken;
+        user.verification_token_expiry = new Date(Date.now() + 1000 * 60 * 60);
+        await this.userRepository.save(user);
+        await this.emailService.sendPasswordReset(user.email, resetToken);
+        return { message: 'Password reset link sent successfully' };
     }
     async resetPassword(token, newPassword) {
         const user = await this.userRepository.findOne({
@@ -275,22 +152,6 @@ let AuthService = class AuthService {
         user.password_reset_code_expiry = null;
         await this.userRepository.save(user);
         return { message: 'Mot de passe réinitialisé avec succès' };
-    }
-    async verifyEmailToken(token) {
-        try {
-            const { email } = await this.emailVerificationService.verifyToken(token);
-            const user = await this.usersService.findByEmail(email);
-            if (!user) {
-                throw new common_1.HttpException('Utilisateur non trouvé', common_1.HttpStatus.NOT_FOUND);
-            }
-            user.email_verified = true;
-            await this.userRepository.save(user);
-            return true;
-        }
-        catch (error) {
-            console.error('Erreur vérification email:', error);
-            throw error;
-        }
     }
 };
 exports.AuthService = AuthService;

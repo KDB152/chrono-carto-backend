@@ -3,7 +3,6 @@ import { AuthService } from './auth.service';
 import { EmailVerificationService } from './email-verification.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { SendVerificationCodeDto, VerifyCodeDto, VerifyTokenDto, SendPasswordResetDto, VerifyPasswordResetCodeDto, ResetPasswordDto } from './dto/verify-email.dto';
 export declare class AuthController {
     private authService;
@@ -22,10 +21,9 @@ export declare class AuthController {
             role: import("../users/entities/user.entity").UserRole;
             firstName: string;
             lastName: string;
-            profileData?: any;
         };
     }>;
-    forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<{
+    forgotPassword(dto: SendPasswordResetDto): Promise<{
         success: boolean;
         message: string;
     }>;

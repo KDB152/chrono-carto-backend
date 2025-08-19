@@ -1,11 +1,10 @@
 // src/modules/auth/auth.controller.ts (VERSION AVEC DEBUG)
-import { Controller, Post, Body, Get, Logger, Query, Res, HttpException, HttpStatus } from '@nestjs/common';  // <--- AJOUTEZ Res
+import { Controller, Post, Body, Get, Logger, Query, Res } from '@nestjs/common';  // <--- AJOUTEZ Res
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { EmailVerificationService } from './email-verification.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { 
   SendVerificationCodeDto, 
   VerifyCodeDto, 
@@ -50,48 +49,16 @@ export class AuthController {
     }
   }
 
-  @Post('forgot-password')
-  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+  @Post('forgot-password')  // <--- AJOUTEZ CET ENDPOINT POUR MATCHER LE FRONTEND
+  async forgotPassword(@Body() dto: SendPasswordResetDto) {
+    this.logger.log(`Demande de réinitialisation pour: ${dto.email}`);
     try {
-      const { email } = forgotPasswordDto;
-
-      // 1️⃣ Vérifier si l'utilisateur existe
-      const user = await this.authService.findUserByEmail(email);
-      
-      if (!user) {
-        // 🔥 RETOURNER UNE ERREUR SPÉCIFIQUE
-        throw new HttpException(
-          {
-            message: "Cette adresse email n'est pas inscrite dans notre système",
-            error: "User not found"
-          },
-          HttpStatus.NOT_FOUND
-        );
-      }
-
-      // 2️⃣ Si l'utilisateur existe, générer le token et envoyer l'email
-      await this.authService.sendResetPasswordEmail(email);
-
-      return {
-        success: true,
-        message: "Un lien de réinitialisation a été envoyé à votre adresse email"
-      };
-
+      const result = await this.emailVerificationService.sendPasswordResetLink(dto.email);  // Assumez lien, pas code
+      this.logger.log(`Réinitialisation traitée pour: ${dto.email}`);
+      return result;
     } catch (error) {
-      // 3️⃣ Propager l'erreur si c'est une HttpException
-      if (error instanceof HttpException) {
-        throw error;
-      }
-
-      // 4️⃣ Gérer les autres erreurs
-      console.error('Erreur forgot-password:', error);
-      throw new HttpException(
-        {
-          message: "Erreur serveur lors de la demande de réinitialisation",
-          error: "Internal server error"
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR
-      );
+      this.logger.error(`Erreur réinitialisation pour ${dto.email}:`, error.message);
+      throw error;
     }
   }
 
@@ -314,4 +281,3 @@ export class AuthController {
     return envCheck;
   }
 }
-

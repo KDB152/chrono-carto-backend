@@ -79,5 +79,4 @@ export class User {
   student: any;
   resetPasswordToken: string;
   resetPasswordExpiry: Date;
-  parent: any;
 }
