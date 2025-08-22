@@ -13,6 +13,7 @@ export declare class User {
     phone: string;
     role: UserRole;
     is_active: boolean;
+    is_approved: boolean;
     email_verified: boolean;
     verification_token: string | null;
     verification_token_expiry: Date | null;
@@ -26,6 +27,7 @@ export declare class User {
     created_at: Date;
     updated_at: Date;
     student: any;
+    parent: any;
     resetPasswordToken: string;
     resetPasswordExpiry: Date;
 }

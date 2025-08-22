@@ -20,7 +20,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Parent.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.OneToOne)(() => user_entity_1.User),
+    (0, typeorm_1.OneToOne)(() => user_entity_1.User, (user) => user.parent),
     (0, typeorm_1.JoinColumn)({ name: 'user_id' }),
     __metadata("design:type", user_entity_1.User)
 ], Parent.prototype, "user", void 0);

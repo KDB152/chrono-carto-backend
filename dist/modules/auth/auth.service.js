@@ -55,29 +55,54 @@ let AuthService = class AuthService {
             default:
                 role = user_entity_1.UserRole.STUDENT;
         }
-        const user = await this.usersService.createUser({
-            email,
-            password,
-            first_name: firstName,
-            last_name: lastName,
-            role,
-        });
-        if (role === user_entity_1.UserRole.STUDENT) {
-            await this.studentsService.createStudent(user.id, phone);
-        }
-        else if (role === user_entity_1.UserRole.PARENT) {
-            await this.parentsService.createParent(user.id, phone);
-        }
         try {
-            await this.emailVerificationService.sendVerificationLink(email);
+            const user = await this.usersService.createUser({
+                email,
+                password,
+                first_name: firstName,
+                last_name: lastName,
+                role,
+            });
+            await this.usersService.update(user.id, { is_approved: false, is_active: false });
+            if (role === user_entity_1.UserRole.STUDENT) {
+                try {
+                    const student = await this.studentsService.create({
+                        user_id: user.id,
+                        phone_number: phone,
+                        birth_date: registerDto.studentBirthDate ? new Date(registerDto.studentBirthDate) : undefined,
+                        class_level: registerDto.studentClass,
+                    });
+                }
+                catch (studentError) {
+                    console.error('Erreur lors de la création de l\'étudiant:', studentError);
+                }
+            }
+            else if (role === user_entity_1.UserRole.PARENT) {
+                try {
+                    const parent = await this.parentsService.create({
+                        user_id: user.id,
+                        phone_number: phone,
+                    });
+                }
+                catch (parentError) {
+                    console.error('Erreur lors de la création du parent:', parentError);
+                }
+            }
+            try {
+                await this.emailVerificationService.sendVerificationLink(email);
+            }
+            catch (error) {
+                console.error('Erreur lors de l\'envoi du lien de vérification:', error);
+            }
+            return {
+                message: 'Inscription réussie. Un lien de vérification a été envoyé à votre adresse email.',
+                userId: user.id
+            };
         }
         catch (error) {
-            console.error('Erreur lors de l\'envoi du lien de vérification:', error);
+            console.error('Erreur lors de l\'inscription:', error);
+            throw error;
         }
-        return {
-            message: 'Inscription réussie. Un lien de vérification a été envoyé à votre adresse email.',
-            userId: user.id
-        };
     }
     async login(loginDto) {
         const { email, password } = loginDto;
@@ -91,6 +116,9 @@ let AuthService = class AuthService {
         }
         if (!user.email_verified) {
             throw new common_1.UnauthorizedException('Veuillez vérifier votre email avant de vous connecter');
+        }
+        if (!user.is_approved) {
+            throw new common_1.UnauthorizedException("Votre compte est en attente d'approbation par un administrateur");
         }
         const payload = { email: user.email, sub: user.id, role: user.role };
         const accessToken = this.jwtService.sign(payload);

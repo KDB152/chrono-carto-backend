@@ -1,5 +1,11 @@
 import 'reflect-metadata';
 import { User } from '../modules/users/entities/user.entity';
+import { Student } from '../modules/students/entities/student.entity';
+import { Parent } from '../modules/parents/entities/parent.entity';
+import { Quiz } from '../modules/quizzes/entities/quiz.entity';
+import { Question } from '../modules/quizzes/entities/question.entity';
+import { QuizAttempt } from '../modules/quizzes/entities/quiz-attempt.entity';
+import { Course } from '../modules/content/entities/course.entity';
 export declare const databaseConfig: {
     type: "mysql";
     host: string;
@@ -7,7 +13,7 @@ export declare const databaseConfig: {
     username: string;
     password: string;
     database: string;
-    entities: (typeof User)[];
+    entities: (typeof User | typeof Student | typeof Parent | typeof Quiz | typeof Question | typeof QuizAttempt | typeof Course)[];
     migrations: string[];
     synchronize: boolean;
     logging: boolean;

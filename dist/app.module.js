@@ -14,6 +14,9 @@ const auth_module_1 = require("./modules/auth/auth.module");
 const users_module_1 = require("./modules/users/users.module");
 const students_module_1 = require("./modules/students/students.module");
 const parents_module_1 = require("./modules/parents/parents.module");
+const quizzes_module_1 = require("./modules/quizzes/quizzes.module");
+const admin_module_1 = require("./modules/admin/admin.module");
+const content_module_1 = require("./modules/content/content.module");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 let AppModule = class AppModule {
@@ -30,6 +33,9 @@ exports.AppModule = AppModule = __decorate([
             users_module_1.UsersModule,
             students_module_1.StudentsModule,
             parents_module_1.ParentsModule,
+            quizzes_module_1.QuizzesModule,
+            admin_module_1.AdminModule,
+            content_module_1.ContentModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

@@ -1,4 +1,42 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query } from '@nestjs/common';
+import { StudentsService } from './students.service';
+import { CreateStudentDto } from './dto/create-student.dto';
+import { UpdateStudentDto } from './dto/update-student.dto';
 
 @Controller('students')
-export class StudentsController {}
+export class StudentsController {
+  constructor(private readonly studentsService: StudentsService) {}
+
+  @Get()
+  findAll(@Query('page') page?: string, @Query('limit') limit?: string) {
+    return this.studentsService.findAll({
+      page: page ? parseInt(page) : 1,
+      limit: limit ? parseInt(limit) : 50,
+    });
+  }
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.studentsService.findOne(parseInt(id));
+  }
+
+  @Get('by-user/:userId')
+  findByUser(@Param('userId') userId: string) {
+    return this.studentsService.findByUserId(parseInt(userId));
+  }
+
+  @Post()
+  create(@Body() dto: CreateStudentDto) {
+    return this.studentsService.create(dto);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() dto: UpdateStudentDto) {
+    return this.studentsService.update(parseInt(id), dto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.studentsService.remove(parseInt(id));
+  }
+}

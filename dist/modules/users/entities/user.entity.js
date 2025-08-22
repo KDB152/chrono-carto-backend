@@ -58,6 +58,10 @@ __decorate([
     __metadata("design:type", Boolean)
 ], User.prototype, "is_active", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ name: 'is_approved', default: false }),
+    __metadata("design:type", Boolean)
+], User.prototype, "is_approved", void 0);
+__decorate([
     (0, typeorm_1.Column)({ name: 'email_verified', default: false }),
     __metadata("design:type", Boolean)
 ], User.prototype, "email_verified", void 0);
@@ -105,6 +109,14 @@ __decorate([
     (0, typeorm_1.UpdateDateColumn)({ name: 'updated_at' }),
     __metadata("design:type", Date)
 ], User.prototype, "updated_at", void 0);
+__decorate([
+    (0, typeorm_1.OneToOne)('Student', 'user'),
+    __metadata("design:type", Object)
+], User.prototype, "student", void 0);
+__decorate([
+    (0, typeorm_1.OneToOne)('Parent', 'user'),
+    __metadata("design:type", Object)
+], User.prototype, "parent", void 0);
 exports.User = User = __decorate([
     (0, typeorm_1.Entity)('users')
 ], User);

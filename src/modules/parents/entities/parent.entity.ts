@@ -7,7 +7,7 @@ export class Parent {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @OneToOne(() => User)
+  @OneToOne(() => User, (user) => user.parent)
   @JoinColumn({ name: 'user_id' })
   user: User;
 

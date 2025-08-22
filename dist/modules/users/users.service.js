@@ -31,11 +31,15 @@ let UsersService = class UsersService {
             last_name: data.last_name,
             role: data.role ?? user_entity_1.UserRole.STUDENT,
             is_active: true,
+            is_approved: data.is_approved ?? false,
         });
         return this.usersRepository.save(user);
     }
     async findByEmail(email) {
         return this.usersRepository.findOne({ where: { email } });
+    }
+    async findAll() {
+        return this.usersRepository.find();
     }
     async findById(id) {
         return this.usersRepository.findOne({ where: { id } });
@@ -43,6 +47,10 @@ let UsersService = class UsersService {
     async update(id, data) {
         await this.usersRepository.update(id, data);
         return this.findById(id);
+    }
+    async remove(id) {
+        await this.usersRepository.delete(id);
+        return { success: true };
     }
 };
 exports.UsersService = UsersService;

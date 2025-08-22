@@ -1,5 +1,5 @@
 // src/modules/users/entities/user.entity.ts (VERSION COMPLÈTE)
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne } from 'typeorm';
 
 export enum UserRole {
   STUDENT = 'student',
@@ -37,6 +37,9 @@ export class User {
 
   @Column({ name: 'is_active', default: true })
   is_active: boolean;
+
+  @Column({ name: 'is_approved', default: false })
+  is_approved: boolean;
 
   // ✅ CHAMPS POUR VÉRIFICATION EMAIL
   @Column({ name: 'email_verified', default: false })
@@ -76,7 +79,14 @@ export class User {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
+
+  // Relations
+  @OneToOne('Student', 'user')
   student: any;
+
+  @OneToOne('Parent', 'user')
+  parent: any;
+
   resetPasswordToken: string;
   resetPasswordExpiry: Date;
 }

@@ -9,8 +9,13 @@ export declare class UsersService {
         first_name?: string;
         last_name?: string;
         role?: UserRole;
+        is_approved?: boolean;
     }): Promise<User>;
     findByEmail(email: string): Promise<User | null>;
+    findAll(): Promise<User[]>;
     findById(id: number): Promise<User | null>;
     update(id: number, data: Partial<User>): Promise<User>;
+    remove(id: number): Promise<{
+        success: boolean;
+    }>;
 }

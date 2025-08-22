@@ -18,7 +18,8 @@
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli",
     "migration:generate": "npm run typeorm migration:generate -- ./src/database/migrations/$npm_config_name -d ./src/config/database.config.ts",
     "migration:run": "npm run typeorm migration:run -- -d ./src/config/database.config.ts",
-    "migration:revert": "npm run typeorm migration:revert -- -d ./src/config/database.config.ts"
+    "migration:revert": "npm run typeorm migration:revert -- -d ./src/config/database.config.ts",
+    "clean-test-users": "node clean-test-users.js"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",

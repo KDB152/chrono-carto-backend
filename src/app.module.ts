@@ -6,6 +6,9 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { StudentsModule } from './modules/students/students.module';
 import { ParentsModule } from './modules/parents/parents.module';
+import { QuizzesModule } from './modules/quizzes/quizzes.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { ContentModule } from './modules/content/content.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -19,6 +22,9 @@ import { AppService } from './app.service';
     UsersModule,
     StudentsModule,
     ParentsModule,
+    QuizzesModule,
+    AdminModule,
+    ContentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

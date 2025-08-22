@@ -10,9 +10,11 @@ exports.AuthModule = void 0;
 const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const jwt_1 = require("@nestjs/jwt");
+const passport_1 = require("@nestjs/passport");
 const auth_service_1 = require("./auth.service");
 const auth_controller_1 = require("./auth.controller");
 const email_verification_service_1 = require("./email-verification.service");
+const jwt_strategy_1 = require("./strategies/jwt.strategy");
 const users_module_1 = require("../users/users.module");
 const students_module_1 = require("../students/students.module");
 const parents_module_1 = require("../parents/parents.module");
@@ -27,14 +29,15 @@ exports.AuthModule = AuthModule = __decorate([
             users_module_1.UsersModule,
             students_module_1.StudentsModule,
             parents_module_1.ParentsModule,
+            passport_1.PassportModule,
             jwt_1.JwtModule.register({
                 secret: process.env.JWT_SECRET || 'supersecretkey',
                 signOptions: { expiresIn: process.env.JWT_EXPIRES_IN || '1h' },
             }),
         ],
-        providers: [auth_service_1.AuthService, email_verification_service_1.EmailVerificationService],
+        providers: [auth_service_1.AuthService, email_verification_service_1.EmailVerificationService, jwt_strategy_1.JwtStrategy],
         controllers: [auth_controller_1.AuthController],
-        exports: [email_verification_service_1.EmailVerificationService, auth_service_1.AuthService],
+        exports: [email_verification_service_1.EmailVerificationService, auth_service_1.AuthService, jwt_strategy_1.JwtStrategy],
     })
 ], AuthModule);
 //# sourceMappingURL=auth.module.js.map

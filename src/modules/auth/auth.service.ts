@@ -51,32 +51,60 @@ export class AuthService {
         role = UserRole.STUDENT; // valeur par défaut
     }
 
-    const user = await this.usersService.createUser({
-      email,
-      password,
-      first_name: firstName,
-      last_name: lastName,
-      role, // ✅ maintenant c'est un UserRole
-    });
-
-    if (role === UserRole.STUDENT) {
-      await this.studentsService.createStudent(user.id, phone);
-    } else if (role === UserRole.PARENT) {
-      await this.parentsService.createParent(user.id, phone);
-    }
-
-    // Envoyer automatiquement le lien de vérification d'email
     try {
-      await this.emailVerificationService.sendVerificationLink(email);
-    } catch (error) {
-      console.error('Erreur lors de l\'envoi du lien de vérification:', error);
-      // Ne pas faire échouer l'inscription si l'email ne peut pas être envoyé
-    }
+      const user = await this.usersService.createUser({
+        email,
+        password,
+        first_name: firstName,
+        last_name: lastName,
+        role, // ✅ maintenant c'est un UserRole
+      });
 
-    return { 
-      message: 'Inscription réussie. Un lien de vérification a été envoyé à votre adresse email.', 
-      userId: user.id 
-    };
+      // New users must be approved by admin
+      await this.usersService.update(user.id, { is_approved: false, is_active: false } as any);
+
+      if (role === UserRole.STUDENT) {
+        try {
+          const student = await this.studentsService.create({
+            user_id: user.id,
+            phone_number: phone,
+            birth_date: registerDto.studentBirthDate ? new Date(registerDto.studentBirthDate) : undefined,
+            class_level: registerDto.studentClass,
+          });
+        } catch (studentError) {
+          console.error('Erreur lors de la création de l\'étudiant:', studentError);
+          // Continue with registration even if student creation fails
+        }
+        // store parent contacts (optional): could be separate table in future
+      } else if (role === UserRole.PARENT) {
+        try {
+          const parent = await this.parentsService.create({
+            user_id: user.id,
+            phone_number: phone,
+          });
+        } catch (parentError) {
+          console.error('Erreur lors de la création du parent:', parentError);
+          // Continue with registration even if parent creation fails
+        }
+        // Optionally pre-create child stub if provided
+      }
+
+      // Envoyer automatiquement le lien de vérification d'email
+      try {
+        await this.emailVerificationService.sendVerificationLink(email);
+      } catch (error) {
+        console.error('Erreur lors de l\'envoi du lien de vérification:', error);
+        // Ne pas faire échouer l'inscription si l'email ne peut pas être envoyé
+      }
+
+      return { 
+        message: 'Inscription réussie. Un lien de vérification a été envoyé à votre adresse email.', 
+        userId: user.id 
+      };
+    } catch (error) {
+      console.error('Erreur lors de l\'inscription:', error);
+      throw error;
+    }
   }
 
   async login(loginDto: LoginDto): Promise<{ accessToken: string; user: { id: number; email: string; role: UserRole; firstName: string; lastName: string } }> {
@@ -96,6 +124,9 @@ export class AuthService {
       throw new UnauthorizedException('Veuillez vérifier votre email avant de vous connecter');
     }
 
+    if (!user.is_approved) {
+      throw new UnauthorizedException("Votre compte est en attente d'approbation par un administrateur");
+    }
     const payload = { email: user.email, sub: user.id, role: user.role };
     const accessToken = this.jwtService.sign(payload);
 
