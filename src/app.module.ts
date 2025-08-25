@@ -6,9 +6,12 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { StudentsModule } from './modules/students/students.module';
 import { ParentsModule } from './modules/parents/parents.module';
+import { RelationsModule } from './modules/relations/relations.module';
 import { QuizzesModule } from './modules/quizzes/quizzes.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { ContentModule } from './modules/content/content.module';
+import { MessagingModule } from './modules/messaging/messaging.module';
+import { SettingsModule } from './modules/settings/settings.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -22,9 +25,12 @@ import { AppService } from './app.service';
     UsersModule,
     StudentsModule,
     ParentsModule,
+    RelationsModule,
     QuizzesModule,
     AdminModule,
     ContentModule,
+    MessagingModule,
+    SettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

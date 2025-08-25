@@ -27,6 +27,9 @@ let ParentsController = class ParentsController {
             limit: limit ? parseInt(limit) : 50,
         });
     }
+    findByUserId(userId) {
+        return this.parentsService.findByUserIdWithUser(parseInt(userId));
+    }
     findOne(id) {
         return this.parentsService.findOne(parseInt(id));
     }
@@ -49,6 +52,13 @@ __decorate([
     __metadata("design:paramtypes", [String, String]),
     __metadata("design:returntype", void 0)
 ], ParentsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)('by-user/:userId'),
+    __param(0, (0, common_1.Param)('userId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], ParentsController.prototype, "findByUserId", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),

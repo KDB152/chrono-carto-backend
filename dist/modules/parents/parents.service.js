@@ -21,6 +21,28 @@ let ParentsService = class ParentsService {
     async findByUserId(userId) {
         return this.parentsRepository.findOne({ where: { user_id: userId } });
     }
+    async findByUserIdWithUser(userId) {
+        const parent = await this.parentsRepository.findOne({
+            where: { user_id: userId },
+            relations: ['user']
+        });
+        if (!parent) {
+            return null;
+        }
+        return {
+            id: parent.id,
+            firstName: parent.user?.first_name || '',
+            lastName: parent.user?.last_name || '',
+            email: parent.user?.email || '',
+            phone: parent.phone_number || '',
+            address: parent.address || '',
+            occupation: parent.occupation || '',
+            role: parent.user?.role || 'parent',
+            isActive: parent.user?.is_active || false,
+            isApproved: parent.user?.is_approved || false,
+            createdAt: parent.user?.created_at ? new Date(parent.user.created_at).toISOString() : new Date().toISOString(),
+        };
+    }
     constructor(parentsRepository) {
         this.parentsRepository = parentsRepository;
     }

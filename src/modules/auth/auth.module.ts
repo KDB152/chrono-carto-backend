@@ -10,6 +10,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { UsersModule } from '../users/users.module';
 import { StudentsModule } from '../students/students.module';
 import { ParentsModule } from '../parents/parents.module';
+import { RelationsModule } from '../relations/relations.module';
 import { User } from '../users/entities/user.entity';
 
 @Module({
@@ -18,10 +19,11 @@ import { User } from '../users/entities/user.entity';
     UsersModule, 
     StudentsModule, 
     ParentsModule,
+    RelationsModule,
     PassportModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'supersecretkey',
-      signOptions: { expiresIn: process.env.JWT_EXPIRES_IN || '1h' },
+      secret: 'PHGv74WOiaVZxGXF8pwJn3XeSmza3byS',
+      signOptions: { expiresIn: '1h' },
     }),
   ],
   providers: [AuthService, EmailVerificationService, JwtStrategy],

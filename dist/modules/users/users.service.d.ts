@@ -10,6 +10,7 @@ export declare class UsersService {
         last_name?: string;
         role?: UserRole;
         is_approved?: boolean;
+        is_active?: boolean;
     }): Promise<User>;
     findByEmail(email: string): Promise<User | null>;
     findAll(): Promise<User[]>;

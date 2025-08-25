@@ -14,9 +14,12 @@ const auth_module_1 = require("./modules/auth/auth.module");
 const users_module_1 = require("./modules/users/users.module");
 const students_module_1 = require("./modules/students/students.module");
 const parents_module_1 = require("./modules/parents/parents.module");
+const relations_module_1 = require("./modules/relations/relations.module");
 const quizzes_module_1 = require("./modules/quizzes/quizzes.module");
 const admin_module_1 = require("./modules/admin/admin.module");
 const content_module_1 = require("./modules/content/content.module");
+const messaging_module_1 = require("./modules/messaging/messaging.module");
+const settings_module_1 = require("./modules/settings/settings.module");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 let AppModule = class AppModule {
@@ -33,9 +36,12 @@ exports.AppModule = AppModule = __decorate([
             users_module_1.UsersModule,
             students_module_1.StudentsModule,
             parents_module_1.ParentsModule,
+            relations_module_1.RelationsModule,
             quizzes_module_1.QuizzesModule,
             admin_module_1.AdminModule,
             content_module_1.ContentModule,
+            messaging_module_1.MessagingModule,
+            settings_module_1.SettingsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

@@ -19,7 +19,9 @@ const auth_service_1 = require("./auth.service");
 const email_verification_service_1 = require("./email-verification.service");
 const register_dto_1 = require("./dto/register.dto");
 const login_dto_1 = require("./dto/login.dto");
+const change_password_dto_1 = require("./dto/change-password.dto");
 const verify_email_dto_1 = require("./dto/verify-email.dto");
+const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
 let AuthController = AuthController_1 = class AuthController {
     constructor(authService, emailVerificationService) {
         this.authService = authService;
@@ -155,6 +157,18 @@ let AuthController = AuthController_1 = class AuthController {
         }
         catch (error) {
             this.logger.error(`Erreur réinitialisation mot de passe:`, error.message);
+            throw error;
+        }
+    }
+    async changePassword(req, dto) {
+        this.logger.log(`Changement mot de passe pour utilisateur: ${req.user.id}`);
+        try {
+            const result = await this.authService.changePassword(req.user.id, dto.currentPassword, dto.newPassword);
+            this.logger.log(`Mot de passe modifié avec succès pour utilisateur: ${req.user.id}`);
+            return result;
+        }
+        catch (error) {
+            this.logger.error(`Erreur changement mot de passe:`, error.message);
             throw error;
         }
     }
@@ -335,6 +349,15 @@ __decorate([
     __metadata("design:paramtypes", [verify_email_dto_1.ResetPasswordDto]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "resetPassword", null);
+__decorate([
+    (0, common_1.Post)('change-password'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, change_password_dto_1.ChangePasswordDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "changePassword", null);
 __decorate([
     (0, common_1.Get)('debug/test-email-config'),
     __metadata("design:type", Function),

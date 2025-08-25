@@ -19,6 +19,7 @@ export class UsersService {
     last_name?: string;
     role?: UserRole;
     is_approved?: boolean;
+    is_active?: boolean;
   }): Promise<User> {
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
@@ -28,7 +29,7 @@ export class UsersService {
       first_name: data.first_name,
       last_name: data.last_name,
       role: data.role ?? UserRole.STUDENT,
-      is_active: true,
+      is_active: data.is_active ?? true,
       is_approved: data.is_approved ?? false,
     });
 

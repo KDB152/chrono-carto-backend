@@ -18,6 +18,7 @@ const jwt_strategy_1 = require("./strategies/jwt.strategy");
 const users_module_1 = require("../users/users.module");
 const students_module_1 = require("../students/students.module");
 const parents_module_1 = require("../parents/parents.module");
+const relations_module_1 = require("../relations/relations.module");
 const user_entity_1 = require("../users/entities/user.entity");
 let AuthModule = class AuthModule {
 };
@@ -29,10 +30,11 @@ exports.AuthModule = AuthModule = __decorate([
             users_module_1.UsersModule,
             students_module_1.StudentsModule,
             parents_module_1.ParentsModule,
+            relations_module_1.RelationsModule,
             passport_1.PassportModule,
             jwt_1.JwtModule.register({
-                secret: process.env.JWT_SECRET || 'supersecretkey',
-                signOptions: { expiresIn: process.env.JWT_EXPIRES_IN || '1h' },
+                secret: 'PHGv74WOiaVZxGXF8pwJn3XeSmza3byS',
+                signOptions: { expiresIn: '1h' },
             }),
         ],
         providers: [auth_service_1.AuthService, email_verification_service_1.EmailVerificationService, jwt_strategy_1.JwtStrategy],

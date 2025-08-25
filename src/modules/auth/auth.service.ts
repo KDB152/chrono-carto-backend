@@ -7,6 +7,7 @@ import { LoginDto } from './dto/login.dto';
 import { UsersService } from '../users/users.service';
 import { StudentsService } from '../students/students.service';
 import { ParentsService } from '../parents/parents.service';
+import { RelationsService } from '../relations/relations.service';
 import { User, UserRole } from '../users/entities/user.entity';
 import { EmailVerificationService } from './email-verification.service';
 import * as bcrypt from 'bcrypt';
@@ -23,6 +24,7 @@ export class AuthService {
     private usersService: UsersService,
     private studentsService: StudentsService,
     private parentsService: ParentsService,
+    private relationsService: RelationsService,
     private emailVerificationService: EmailVerificationService,
     @InjectRepository(User)
     private userRepository: Repository<User>,
@@ -71,11 +73,51 @@ export class AuthService {
             birth_date: registerDto.studentBirthDate ? new Date(registerDto.studentBirthDate) : undefined,
             class_level: registerDto.studentClass,
           });
+
+          // Si l'étudiant a fourni les détails de ses parents, créer automatiquement un compte parent
+          if (registerDto.parentFirstName && registerDto.parentLastName && registerDto.parentEmail) {
+            try {
+              // Vérifier si un parent avec cet email existe déjà
+              const existingParentUser = await this.usersService.findByEmail(registerDto.parentEmail);
+              
+              if (!existingParentUser) {
+                // Créer un nouveau compte parent non vérifié et non approuvé
+                const parentUser = await this.usersService.createUser({
+                  email: registerDto.parentEmail,
+                  password: this.generateTemporaryPassword(), // Mot de passe temporaire
+                  first_name: registerDto.parentFirstName,
+                  last_name: registerDto.parentLastName,
+                  role: UserRole.PARENT,
+                  is_approved: false, // Non approuvé par l'administrateur
+                  is_active: false, // Non actif
+                });
+
+                // Créer l'entité parent
+                const parent = await this.parentsService.create({
+                  user_id: parentUser.id,
+                  phone_number: registerDto.parentPhone,
+                });
+
+                // Créer la relation parent-student
+                await this.relationsService.createParentStudentRelation(parent.id, student.id);
+
+                console.log(`Compte parent créé automatiquement pour l'étudiant ${user.email}`);
+              } else {
+                // Si le parent existe déjà, créer la relation
+                const existingParent = await this.parentsService.findByUserId(existingParentUser.id);
+                if (existingParent) {
+                  await this.relationsService.createParentStudentRelation(existingParent.id, student.id);
+                }
+              }
+            } catch (parentCreationError) {
+              console.error('Erreur lors de la création automatique du compte parent:', parentCreationError);
+              // Ne pas faire échouer l'inscription de l'étudiant
+            }
+          }
         } catch (studentError) {
           console.error('Erreur lors de la création de l\'étudiant:', studentError);
           // Continue with registration even if student creation fails
         }
-        // store parent contacts (optional): could be separate table in future
       } else if (role === UserRole.PARENT) {
         try {
           const parent = await this.parentsService.create({
@@ -86,7 +128,6 @@ export class AuthService {
           console.error('Erreur lors de la création du parent:', parentError);
           // Continue with registration even if parent creation fails
         }
-        // Optionally pre-create child stub if provided
       }
 
       // Envoyer automatiquement le lien de vérification d'email
@@ -221,5 +262,46 @@ export class AuthService {
     await this.userRepository.save(user);
 
     return { message: 'Mot de passe réinitialisé avec succès' };
+  }
+
+  async changePassword(userId: number, currentPassword: string, newPassword: string): Promise<{ message: string }> {
+    // Récupérer l'utilisateur
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    
+    if (!user) {
+      throw new HttpException('Utilisateur non trouvé', HttpStatus.NOT_FOUND);
+    }
+
+    // Vérifier le mot de passe actuel
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isCurrentPasswordValid) {
+      throw new HttpException('Mot de passe actuel incorrect', HttpStatus.BAD_REQUEST);
+    }
+
+    // Vérifier que le nouveau mot de passe est différent de l'actuel
+    const isNewPasswordSame = await bcrypt.compare(newPassword, user.password_hash);
+    if (isNewPasswordSame) {
+      throw new HttpException('Le nouveau mot de passe doit être différent de l\'actuel', HttpStatus.BAD_REQUEST);
+    }
+
+    // Hasher le nouveau mot de passe
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Mettre à jour le mot de passe
+    user.password_hash = hashedPassword;
+    await this.userRepository.save(user);
+
+    return { message: 'Mot de passe modifié avec succès' };
+  }
+
+  private generateTemporaryPassword(): string {
+    // Générer un mot de passe temporaire aléatoire
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
   }
 }

@@ -23,6 +23,19 @@ export declare class ParentsController {
         page: number;
         limit: number;
     }>;
+    findByUserId(userId: string): Promise<{
+        id: number;
+        firstName: string;
+        lastName: string;
+        email: string;
+        phone: string;
+        address: string;
+        occupation: string;
+        role: string;
+        isActive: boolean;
+        isApproved: boolean;
+        createdAt: string;
+    }>;
     findOne(id: string): Promise<import("./entities/parent.entity").Parent>;
     create(dto: CreateParentDto): Promise<import("./entities/parent.entity").Parent>;
     update(id: string, dto: UpdateParentDto): Promise<import("./entities/parent.entity").Parent>;

@@ -15,6 +15,11 @@ export class ParentsController {
     });
   }
 
+  @Get('by-user/:userId')
+  findByUserId(@Param('userId') userId: string) {
+    return this.parentsService.findByUserIdWithUser(parseInt(userId));
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.parentsService.findOne(parseInt(id));

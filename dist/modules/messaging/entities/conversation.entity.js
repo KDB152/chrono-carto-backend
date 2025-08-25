@@ -11,8 +11,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.Conversation = void 0;
 const typeorm_1 = require("typeorm");
-const user_entity_1 = require("../../users/entities/user.entity");
-const message_entity_1 = require("./message.entity");
 let Conversation = class Conversation {
 };
 exports.Conversation = Conversation;
@@ -48,25 +46,6 @@ __decorate([
     (0, typeorm_1.UpdateDateColumn)(),
     __metadata("design:type", Date)
 ], Conversation.prototype, "updated_at", void 0);
-__decorate([
-    (0, typeorm_1.ManyToOne)(() => user_entity_1.User),
-    (0, typeorm_1.JoinColumn)({ name: 'participant1_id' }),
-    __metadata("design:type", user_entity_1.User)
-], Conversation.prototype, "participant1", void 0);
-__decorate([
-    (0, typeorm_1.ManyToOne)(() => user_entity_1.User),
-    (0, typeorm_1.JoinColumn)({ name: 'participant2_id' }),
-    __metadata("design:type", user_entity_1.User)
-], Conversation.prototype, "participant2", void 0);
-__decorate([
-    (0, typeorm_1.OneToMany)(() => message_entity_1.Message, message => message.conversation),
-    __metadata("design:type", Array)
-], Conversation.prototype, "messages", void 0);
-__decorate([
-    (0, typeorm_1.ManyToOne)(() => message_entity_1.Message),
-    (0, typeorm_1.JoinColumn)({ name: 'last_message_id' }),
-    __metadata("design:type", message_entity_1.Message)
-], Conversation.prototype, "lastMessage", void 0);
 exports.Conversation = Conversation = __decorate([
     (0, typeorm_1.Entity)('conversations')
 ], Conversation);

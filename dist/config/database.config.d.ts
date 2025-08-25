@@ -2,10 +2,13 @@ import 'reflect-metadata';
 import { User } from '../modules/users/entities/user.entity';
 import { Student } from '../modules/students/entities/student.entity';
 import { Parent } from '../modules/parents/entities/parent.entity';
+import { ParentStudent } from '../modules/relations/entities/parent-student.entity';
 import { Quiz } from '../modules/quizzes/entities/quiz.entity';
 import { Question } from '../modules/quizzes/entities/question.entity';
 import { QuizAttempt } from '../modules/quizzes/entities/quiz-attempt.entity';
 import { Course } from '../modules/content/entities/course.entity';
+import { SystemSettings } from '../modules/settings/entities/settings.entity';
+import { UserPreferences } from '../modules/settings/entities/user-preferences.entity';
 export declare const databaseConfig: {
     type: "mysql";
     host: string;
@@ -13,7 +16,7 @@ export declare const databaseConfig: {
     username: string;
     password: string;
     database: string;
-    entities: (typeof User | typeof Student | typeof Parent | typeof Quiz | typeof Question | typeof QuizAttempt | typeof Course)[];
+    entities: (typeof User | typeof Student | typeof Parent | typeof ParentStudent | typeof Quiz | typeof Question | typeof QuizAttempt | typeof Course | typeof SystemSettings | typeof UserPreferences)[];
     migrations: string[];
     synchronize: boolean;
     logging: boolean;

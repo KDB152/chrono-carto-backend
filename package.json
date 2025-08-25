@@ -19,7 +19,18 @@
     "migration:generate": "npm run typeorm migration:generate -- ./src/database/migrations/$npm_config_name -d ./src/config/database.config.ts",
     "migration:run": "npm run typeorm migration:run -- -d ./src/config/database.config.ts",
     "migration:revert": "npm run typeorm migration:revert -- -d ./src/config/database.config.ts",
-    "clean-test-users": "node clean-test-users.js"
+    "clean-test-users": "node clean-test-users.js",
+    "test-content-api": "node test-content-api.js",
+    "test-messaging-api": "node test-messaging-api.js",
+    "test-all-dashboards-messaging": "node test-all-dashboards-messaging.js",
+    "test-user-authentication": "node test-user-authentication.js",
+    "reset-user-passwords": "node reset-user-passwords.js",
+    "create-messaging-tables": "node create-messaging-tables.js",
+    "test-parent-student": "node test-parent-student-creation.js",
+    "check-parent-student-data": "node check-parent-student-data.js",
+    "test-parent-student-full": "node start-and-test.js",
+    "initialize-settings": "node initialize-settings.js",
+    "test-settings-api": "node test-settings-api.js"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
@@ -32,6 +43,7 @@
     "@nestjs/swagger": "^7.1.0",
     "@nestjs/typeorm": "^10.0.0",
     "@nestjs/websockets": "^10.0.0",
+    "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.5.1",

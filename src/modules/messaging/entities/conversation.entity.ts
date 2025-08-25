@@ -1,6 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
-import { Message } from './message.entity';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity('conversations')
 export class Conversation {
@@ -27,19 +25,4 @@ export class Conversation {
 
   @UpdateDateColumn()
   updated_at: Date;
-
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'participant1_id' })
-  participant1: User;
-
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'participant2_id' })
-  participant2: User;
-
-  @OneToMany(() => Message, message => message.conversation)
-  messages: Message[];
-
-  @ManyToOne(() => Message)
-  @JoinColumn({ name: 'last_message_id' })
-  lastMessage: Message;
 }

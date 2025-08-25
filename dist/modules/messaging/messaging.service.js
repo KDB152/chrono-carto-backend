@@ -18,10 +18,12 @@ const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const conversation_entity_1 = require("./entities/conversation.entity");
 const message_entity_1 = require("./entities/message.entity");
+const user_entity_1 = require("../users/entities/user.entity");
 let MessagingService = class MessagingService {
-    constructor(conversationRepository, messageRepository) {
+    constructor(conversationRepository, messageRepository, userRepository) {
         this.conversationRepository = conversationRepository;
         this.messageRepository = messageRepository;
+        this.userRepository = userRepository;
     }
     async getConversations(userId) {
         return this.conversationRepository.find({
@@ -29,14 +31,12 @@ let MessagingService = class MessagingService {
                 { participant1_id: userId },
                 { participant2_id: userId }
             ],
-            relations: ['participant1', 'participant2', 'lastMessage'],
             order: { updated_at: 'DESC' }
         });
     }
     async getConversation(id) {
         return this.conversationRepository.findOne({
-            where: { id },
-            relations: ['participant1', 'participant2', 'messages']
+            where: { id }
         });
     }
     async createConversation(dto) {
@@ -51,7 +51,6 @@ let MessagingService = class MessagingService {
     async getMessages(conversationId) {
         return this.messageRepository.find({
             where: { conversation_id: conversationId },
-            relations: ['sender'],
             order: { created_at: 'ASC' }
         });
     }
@@ -72,7 +71,31 @@ let MessagingService = class MessagingService {
     async markMessageAsRead(messageId) {
         return this.messageRepository.update(messageId, { is_read: true });
     }
-    async deleteConversation(id) {
+    async deleteConversation(id, userId) {
+        const conversation = await this.conversationRepository.findOne({
+            where: { id }
+        });
+        if (!conversation) {
+            throw new Error('Conversation not found');
+        }
+        let canDelete = false;
+        if (userId) {
+            const user = await this.userRepository.findOne({
+                where: { id: userId },
+                select: ['id', 'role']
+            });
+            if (user) {
+                if (user.role === 'admin') {
+                    canDelete = true;
+                }
+                else if (conversation.participant1_id === userId || conversation.participant2_id === userId) {
+                    canDelete = true;
+                }
+            }
+        }
+        if (!canDelete) {
+            throw new Error('You do not have permission to delete this conversation');
+        }
         await this.messageRepository.delete({ conversation_id: id });
         return this.conversationRepository.delete(id);
     }
@@ -84,19 +107,22 @@ let MessagingService = class MessagingService {
             where: [
                 { participant1_id: userId },
                 { participant2_id: userId }
-            ],
-            relations: ['participant1', 'participant2']
+            ]
         });
-        const contacts = new Set();
+        const contactIds = new Set();
         conversations.forEach(conv => {
             if (conv.participant1_id === userId) {
-                contacts.add(conv.participant2);
+                contactIds.add(conv.participant2_id);
             }
             else {
-                contacts.add(conv.participant1);
+                contactIds.add(conv.participant1_id);
             }
         });
-        return Array.from(contacts);
+        const contacts = await this.userRepository.find({
+            where: { id: (0, typeorm_2.In)(Array.from(contactIds)) },
+            select: ['id', 'first_name', 'last_name', 'email', 'role']
+        });
+        return contacts;
     }
     async searchMessages(conversationId, query) {
         return this.messageRepository
@@ -106,13 +132,106 @@ let MessagingService = class MessagingService {
             .orderBy('message.created_at', 'ASC')
             .getMany();
     }
+    async getAvailableRecipients(currentUserId) {
+        return this.userRepository.find({
+            where: {
+                is_approved: true,
+                is_active: true,
+                id: (0, typeorm_2.Not)(currentUserId)
+            },
+            select: ['id', 'first_name', 'last_name', 'email', 'role'],
+            order: {
+                first_name: 'ASC',
+                last_name: 'ASC'
+            }
+        });
+    }
+    async createOrGetConversation(participant1Id, participant2Id) {
+        try {
+            console.log('Creating conversation with:', { participant1Id, participant2Id });
+            if (!participant1Id || !participant2Id) {
+                throw new Error('Both participant1Id and participant2Id are required');
+            }
+            if (isNaN(participant1Id) || isNaN(participant2Id)) {
+                throw new Error('Both participant1Id and participant2Id must be valid numbers');
+            }
+            if (participant1Id === participant2Id) {
+                throw new Error('Cannot create conversation with the same user');
+            }
+            console.log('Looking for existing conversation between:', participant1Id, 'and', participant2Id);
+            let conversation = await this.conversationRepository.findOne({
+                where: [
+                    { participant1_id: participant1Id, participant2_id: participant2Id },
+                    { participant1_id: participant2Id, participant2_id: participant1Id }
+                ]
+            });
+            if (!conversation) {
+                console.log('No existing conversation found, creating new one');
+                conversation = this.conversationRepository.create({
+                    participant1_id: participant1Id,
+                    participant2_id: participant2Id,
+                    type: 'direct'
+                });
+                conversation = await this.conversationRepository.save(conversation);
+                console.log('New conversation created:', conversation);
+            }
+            else {
+                console.log('Existing conversation found:', conversation);
+            }
+            return conversation;
+        }
+        catch (error) {
+            console.error('Error in createOrGetConversation:', error);
+            throw error;
+        }
+    }
+    async uploadFile(file, body) {
+        try {
+            if (!file) {
+                throw new Error('No file uploaded');
+            }
+            if (!body.conversationId || !body.senderId) {
+                throw new Error('conversationId and senderId are required');
+            }
+            const conversationId = parseInt(body.conversationId);
+            const senderId = parseInt(body.senderId);
+            const conversation = await this.conversationRepository.findOne({
+                where: { id: conversationId }
+            });
+            if (!conversation) {
+                throw new Error('Conversation not found');
+            }
+            if (conversation.participant1_id !== senderId && conversation.participant2_id !== senderId) {
+                throw new Error('Sender is not a participant in this conversation');
+            }
+            const message = this.messageRepository.create({
+                conversation_id: conversationId,
+                sender_id: senderId,
+                content: file.originalname,
+                message_type: 'file',
+                file_path: file.path
+            });
+            const savedMessage = await this.messageRepository.save(message);
+            await this.conversationRepository.update(conversationId, {
+                last_message_id: savedMessage.id,
+                updated_at: new Date()
+            });
+            return savedMessage;
+        }
+        catch (error) {
+            console.error('Error uploading file:', error);
+            throw error;
+        }
+    }
 };
 exports.MessagingService = MessagingService;
 exports.MessagingService = MessagingService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(conversation_entity_1.Conversation)),
     __param(1, (0, typeorm_1.InjectRepository)(message_entity_1.Message)),
+    __param(2, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [typeorm_2.Repository,
+        typeorm_2.Repository,
         typeorm_2.Repository])
 ], MessagingService);
 //# sourceMappingURL=messaging.service.js.map

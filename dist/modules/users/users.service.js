@@ -30,7 +30,7 @@ let UsersService = class UsersService {
             first_name: data.first_name,
             last_name: data.last_name,
             role: data.role ?? user_entity_1.UserRole.STUDENT,
-            is_active: true,
+            is_active: data.is_active ?? true,
             is_approved: data.is_approved ?? false,
         });
         return this.usersRepository.save(user);

@@ -1,10 +1,11 @@
 // src/modules/auth/auth.controller.ts (VERSION AVEC DEBUG)
-import { Controller, Post, Body, Get, Logger, Query, Res } from '@nestjs/common';  // <--- AJOUTEZ Res
+import { Controller, Post, Body, Get, Logger, Query, Res, UseGuards, Request } from '@nestjs/common';  // <--- AJOUTEZ UseGuards, Request
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { EmailVerificationService } from './email-verification.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';  // <--- AJOUTEZ CET IMPORT
 import { 
   SendVerificationCodeDto, 
   VerifyCodeDto, 
@@ -13,6 +14,7 @@ import {
   VerifyPasswordResetCodeDto,
   ResetPasswordDto
 } from './dto/verify-email.dto';
+import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';  // <--- AJOUTEZ CET IMPORT
 
 @Controller('auth')
 export class AuthController {
@@ -166,6 +168,24 @@ export class AuthController {
       return result;
     } catch (error) {
       this.logger.error(`Erreur réinitialisation mot de passe:`, error.message);
+      throw error;
+    }
+  }
+
+  @Post('change-password')
+  @UseGuards(JwtAuthGuard)
+  async changePassword(@Request() req, @Body() dto: ChangePasswordDto) {
+    this.logger.log(`Changement mot de passe pour utilisateur: ${req.user.id}`);
+    try {
+      const result = await this.authService.changePassword(
+        req.user.id, 
+        dto.currentPassword, 
+        dto.newPassword
+      );
+      this.logger.log(`Mot de passe modifié avec succès pour utilisateur: ${req.user.id}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Erreur changement mot de passe:`, error.message);
       throw error;
     }
   }
