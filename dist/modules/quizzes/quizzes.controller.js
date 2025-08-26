@@ -16,6 +16,8 @@ exports.QuizzesController = void 0;
 const common_1 = require("@nestjs/common");
 const quizzes_service_1 = require("./quizzes.service");
 const create_quiz_dto_1 = require("./dto/create-quiz.dto");
+const create_question_dto_1 = require("./dto/create-question.dto");
+const update_question_dto_1 = require("./dto/update-question.dto");
 const submit_quiz_dto_1 = require("./dto/submit-quiz.dto");
 let QuizzesController = class QuizzesController {
     constructor(quizzesService) {
@@ -30,8 +32,17 @@ let QuizzesController = class QuizzesController {
             status,
         });
     }
+    listStudentAttempts(quizId, studentId) {
+        return this.quizzesService.listStudentAttempts(quizId ? parseInt(quizId) : undefined, studentId ? parseInt(studentId) : undefined);
+    }
     findOne(id) {
         return this.quizzesService.findOne(parseInt(id));
+    }
+    findOneWithQuestions(id) {
+        return this.quizzesService.findOneWithQuestions(parseInt(id));
+    }
+    listAttempts(id) {
+        return this.quizzesService.listAttempts(parseInt(id));
     }
     create(dto) {
         return this.quizzesService.create(dto);
@@ -42,11 +53,23 @@ let QuizzesController = class QuizzesController {
     remove(id) {
         return this.quizzesService.remove(parseInt(id));
     }
-    listAttempts(id) {
-        return this.quizzesService.listAttempts(parseInt(id));
-    }
     submitAttempt(dto) {
         return this.quizzesService.submitAttempt(dto);
+    }
+    findQuestions(quizId) {
+        return this.quizzesService.findQuestions(parseInt(quizId));
+    }
+    findQuestion(questionId) {
+        return this.quizzesService.findQuestion(parseInt(questionId));
+    }
+    createQuestion(dto) {
+        return this.quizzesService.createQuestion(dto);
+    }
+    updateQuestion(questionId, dto) {
+        return this.quizzesService.updateQuestion(parseInt(questionId), dto);
+    }
+    removeQuestion(questionId) {
+        return this.quizzesService.removeQuestion(parseInt(questionId));
     }
 };
 exports.QuizzesController = QuizzesController;
@@ -62,12 +85,34 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], QuizzesController.prototype, "findAll", null);
 __decorate([
+    (0, common_1.Get)('attempts'),
+    __param(0, (0, common_1.Query)('quiz_id')),
+    __param(1, (0, common_1.Query)('student_id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], QuizzesController.prototype, "listStudentAttempts", null);
+__decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", void 0)
 ], QuizzesController.prototype, "findOne", null);
+__decorate([
+    (0, common_1.Get)(':id/with-questions'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], QuizzesController.prototype, "findOneWithQuestions", null);
+__decorate([
+    (0, common_1.Get)(':id/attempts'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], QuizzesController.prototype, "listAttempts", null);
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
@@ -91,19 +136,48 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], QuizzesController.prototype, "remove", null);
 __decorate([
-    (0, common_1.Get)(':id/attempts'),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", void 0)
-], QuizzesController.prototype, "listAttempts", null);
-__decorate([
     (0, common_1.Post)('attempts'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [submit_quiz_dto_1.SubmitQuizDto]),
     __metadata("design:returntype", void 0)
 ], QuizzesController.prototype, "submitAttempt", null);
+__decorate([
+    (0, common_1.Get)(':quizId/questions'),
+    __param(0, (0, common_1.Param)('quizId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], QuizzesController.prototype, "findQuestions", null);
+__decorate([
+    (0, common_1.Get)('questions/:questionId'),
+    __param(0, (0, common_1.Param)('questionId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], QuizzesController.prototype, "findQuestion", null);
+__decorate([
+    (0, common_1.Post)('questions'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [create_question_dto_1.CreateQuestionDto]),
+    __metadata("design:returntype", void 0)
+], QuizzesController.prototype, "createQuestion", null);
+__decorate([
+    (0, common_1.Patch)('questions/:questionId'),
+    __param(0, (0, common_1.Param)('questionId')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, update_question_dto_1.UpdateQuestionDto]),
+    __metadata("design:returntype", void 0)
+], QuizzesController.prototype, "updateQuestion", null);
+__decorate([
+    (0, common_1.Delete)('questions/:questionId'),
+    __param(0, (0, common_1.Param)('questionId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], QuizzesController.prototype, "removeQuestion", null);
 exports.QuizzesController = QuizzesController = __decorate([
     (0, common_1.Controller)('quizzes'),
     __metadata("design:paramtypes", [quizzes_service_1.QuizzesService])

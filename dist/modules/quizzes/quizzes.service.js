@@ -40,6 +40,16 @@ let QuizzesService = class QuizzesService {
     async findOne(id) {
         return this.quizRepo.findOne({ where: { id } });
     }
+    async findOneWithQuestions(id) {
+        const quiz = await this.quizRepo.findOne({ where: { id } });
+        if (!quiz)
+            return null;
+        const questions = await this.questionRepo.find({
+            where: { quiz_id: id },
+            order: { id: 'ASC' }
+        });
+        return { ...quiz, questions };
+    }
     async create(dto) {
         const entity = this.quizRepo.create({
             title: dto.title,
@@ -62,13 +72,70 @@ let QuizzesService = class QuizzesService {
         return this.findOne(id);
     }
     async remove(id) {
+        await this.questionRepo.delete({ quiz_id: id });
+        await this.attemptRepo.delete({ quiz_id: id });
         await this.quizRepo.delete(id);
         return { success: true };
+    }
+    async findQuestions(quizId) {
+        return this.questionRepo.find({
+            where: { quiz_id: quizId },
+            order: { id: 'ASC' }
+        });
+    }
+    async findQuestion(questionId) {
+        return this.questionRepo.findOne({ where: { id: questionId } });
+    }
+    async createQuestion(dto) {
+        const entity = this.questionRepo.create({
+            quiz_id: dto.quiz_id,
+            question: dto.question,
+            type: dto.type,
+            options: dto.options,
+            correct_answer: dto.correct_answer,
+            points: dto.points ?? 1,
+            explanation: dto.explanation,
+        });
+        const savedQuestion = await this.questionRepo.save(entity);
+        await this.updateQuizTotalPoints(dto.quiz_id);
+        return savedQuestion;
+    }
+    async updateQuestion(questionId, dto) {
+        await this.questionRepo.update(questionId, dto);
+        const updatedQuestion = await this.findQuestion(questionId);
+        if (updatedQuestion) {
+            await this.updateQuizTotalPoints(updatedQuestion.quiz_id);
+        }
+        return updatedQuestion;
+    }
+    async removeQuestion(questionId) {
+        const question = await this.findQuestion(questionId);
+        if (!question)
+            return { success: false, message: 'Question not found' };
+        await this.questionRepo.delete(questionId);
+        await this.updateQuizTotalPoints(question.quiz_id);
+        return { success: true };
+    }
+    async updateQuizTotalPoints(quizId) {
+        const questions = await this.findQuestions(quizId);
+        const totalPoints = questions.reduce((sum, q) => sum + q.points, 0);
+        await this.quizRepo.update(quizId, { total_points: totalPoints });
     }
     async listAttempts(quizId) {
         if (quizId)
             return this.attemptRepo.find({ where: { quiz_id: quizId }, order: { id: 'DESC' } });
         return this.attemptRepo.find({ order: { id: 'DESC' } });
+    }
+    async listStudentAttempts(quizId, studentId) {
+        const where = {};
+        if (quizId)
+            where.quiz_id = quizId;
+        if (studentId)
+            where.student_id = studentId;
+        return this.attemptRepo.find({
+            where,
+            order: { id: 'DESC' }
+        });
     }
     async submitAttempt(dto) {
         const entity = this.attemptRepo.create({

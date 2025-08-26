@@ -9,43 +9,40 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.SubmitQuizDto = void 0;
+exports.UpdateQuestionDto = void 0;
 const class_validator_1 = require("class-validator");
-class SubmitQuizDto {
+class UpdateQuestionDto {
 }
-exports.SubmitQuizDto = SubmitQuizDto;
+exports.UpdateQuestionDto = UpdateQuestionDto;
 __decorate([
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], SubmitQuizDto.prototype, "quiz_id", void 0);
-__decorate([
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], SubmitQuizDto.prototype, "student_id", void 0);
-__decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], SubmitQuizDto.prototype, "student_name", void 0);
+], UpdateQuestionDto.prototype, "question", void 0);
 __decorate([
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], SubmitQuizDto.prototype, "score", void 0);
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(['multiple', 'single', 'text', 'boolean']),
+    __metadata("design:type", String)
+], UpdateQuestionDto.prototype, "type", void 0);
 __decorate([
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], SubmitQuizDto.prototype, "total_points", void 0);
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    __metadata("design:type", Array)
+], UpdateQuestionDto.prototype, "options", void 0);
 __decorate([
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], SubmitQuizDto.prototype, "percentage", void 0);
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateQuestionDto.prototype, "correct_answer", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
-], SubmitQuizDto.prototype, "time_spent", void 0);
+], UpdateQuestionDto.prototype, "points", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsObject)(),
-    __metadata("design:type", Object)
-], SubmitQuizDto.prototype, "answers", void 0);
-//# sourceMappingURL=submit-quiz.dto.js.map
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateQuestionDto.prototype, "explanation", void 0);
+//# sourceMappingURL=update-question.dto.js.map

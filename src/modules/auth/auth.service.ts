@@ -161,12 +161,15 @@ export class AuthService {
       throw new UnauthorizedException('Email ou mot de passe incorrect');
     }
 
-    if (!user.email_verified) {
-      throw new UnauthorizedException('Veuillez vérifier votre email avant de vous connecter');
-    }
+    // Pour les admins, contourner temporairement les vérifications
+    if (user.role !== UserRole.ADMIN) {
+      if (!user.email_verified) {
+        throw new UnauthorizedException('Veuillez vérifier votre email avant de vous connecter');
+      }
 
-    if (!user.is_approved) {
-      throw new UnauthorizedException("Votre compte est en attente d'approbation par un administrateur");
+      if (!user.is_approved) {
+        throw new UnauthorizedException("Votre compte est en attente d'approbation par un administrateur");
+      }
     }
     const payload = { email: user.email, sub: user.id, role: user.role };
     const accessToken = this.jwtService.sign(payload);
