@@ -41,7 +41,7 @@ let AdminService = class AdminService {
                         console.log(`Creating student profile for user ${user.id} (${user.email})`);
                         await this.studentsService.create({
                             user_id: user.id,
-                            class_level: 'Non spécifié',
+                            class_level: undefined,
                             phone_number: user.phone || '',
                         });
                     }

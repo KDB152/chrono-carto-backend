@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { DataSource } from 'typeorm';
 import { User } from '../modules/users/entities/user.entity';
 import { Student } from '../modules/students/entities/student.entity';
 import { Parent } from '../modules/parents/entities/parent.entity';
@@ -21,3 +22,5 @@ export declare const databaseConfig: {
     synchronize: boolean;
     logging: boolean;
 };
+declare const _default: DataSource;
+export default _default;

@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.databaseConfig = void 0;
 require("reflect-metadata");
+const typeorm_1 = require("typeorm");
 const dotenv = require("dotenv");
 dotenv.config();
 const user_entity_1 = require("../modules/users/entities/user.entity");
@@ -22,8 +23,9 @@ exports.databaseConfig = {
     password: process.env.DB_PASSWORD || '',
     database: process.env.DB_NAME || 'chrono_carto',
     entities: [user_entity_1.User, student_entity_1.Student, parent_entity_1.Parent, parent_student_entity_1.ParentStudent, quiz_entity_1.Quiz, question_entity_1.Question, quiz_attempt_entity_1.QuizAttempt, course_entity_1.Course, settings_entity_1.SystemSettings, user_preferences_entity_1.UserPreferences],
-    migrations: ['src/database/migrations/*.ts'],
+    migrations: ['src/database/migrations/*{.ts,.js}'],
     synchronize: true,
     logging: true,
 };
+exports.default = new typeorm_1.DataSource(exports.databaseConfig);
 //# sourceMappingURL=database.config.js.map

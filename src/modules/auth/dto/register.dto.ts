@@ -1,6 +1,7 @@
 // src/modules/auth/dto/register.dto.ts
 import { IsEmail, IsString, IsOptional, IsEnum } from 'class-validator';
 import { UserRole } from '../../users/entities/user.entity';
+import { ClassLevel } from '../../students/entities/student.entity';
 
 export class RegisterDto {
   @IsString()
@@ -28,8 +29,8 @@ export class RegisterDto {
   studentBirthDate?: string;
 
   @IsOptional()
-  @IsString()
-  studentClass?: string;
+  @IsEnum(ClassLevel)
+  studentClass?: ClassLevel;
 
   // Parent-specific
   @IsOptional()
@@ -45,8 +46,8 @@ export class RegisterDto {
   childBirthDate?: string;
 
   @IsOptional()
-  @IsString()
-  childClass?: string;
+  @IsEnum(ClassLevel)
+  childClass?: ClassLevel;
 
   // Student requires parent contacts
   @IsOptional()

@@ -76,7 +76,7 @@ export class StudentsService {
     return this.studentsRepository.findOne({ where: { id } });
   }
 
-  async create(dto: CreateStudentDto) {
+  async create(dto: CreateStudentDto): Promise<Student> {
     // Check if student already exists for this user
     const existingStudent = await this.studentsRepository.findOne({
       where: { user_id: dto.user_id },

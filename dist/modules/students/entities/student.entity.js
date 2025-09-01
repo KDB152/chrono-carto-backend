@@ -9,9 +9,19 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Student = void 0;
+exports.Student = exports.ClassLevel = void 0;
 const typeorm_1 = require("typeorm");
 const user_entity_1 = require("../../users/entities/user.entity");
+var ClassLevel;
+(function (ClassLevel) {
+    ClassLevel["TERMINALE_GROUPE_1"] = "Terminale groupe 1";
+    ClassLevel["TERMINALE_GROUPE_2"] = "Terminale groupe 2";
+    ClassLevel["TERMINALE_GROUPE_3"] = "Terminale groupe 3";
+    ClassLevel["TERMINALE_GROUPE_4"] = "Terminale groupe 4";
+    ClassLevel["PREMIERE_GROUPE_1"] = "1\u00E8re groupe 1";
+    ClassLevel["PREMIERE_GROUPE_2"] = "1\u00E8re groupe 2";
+    ClassLevel["PREMIERE_GROUPE_3"] = "1\u00E8re groupe 3";
+})(ClassLevel || (exports.ClassLevel = ClassLevel = {}));
 let Student = class Student {
 };
 exports.Student = Student;
@@ -29,7 +39,11 @@ __decorate([
     __metadata("design:type", Number)
 ], Student.prototype, "user_id", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({
+        type: 'enum',
+        enum: ClassLevel,
+        nullable: true,
+    }),
     __metadata("design:type", String)
 ], Student.prototype, "class_level", void 0);
 __decorate([
@@ -64,6 +78,14 @@ __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", Number)
 ], Student.prototype, "parent_id", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: 0 }),
+    __metadata("design:type", Number)
+], Student.prototype, "paid_sessions", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: 0 }),
+    __metadata("design:type", Number)
+], Student.prototype, "unpaid_sessions", void 0);
 exports.Student = Student = __decorate([
     (0, typeorm_1.Entity)('students')
 ], Student);

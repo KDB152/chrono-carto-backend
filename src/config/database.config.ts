@@ -27,7 +27,10 @@ export const databaseConfig = {
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'chrono_carto',
   entities: [User, Student, Parent, ParentStudent, Quiz, Question, QuizAttempt, Course, SystemSettings, UserPreferences],
-  migrations: ['src/database/migrations/*.ts'],
+  migrations: ['src/database/migrations/*{.ts,.js}'],
   synchronize: true,
   logging: true,
 };
+
+// DataSource for TypeORM CLI
+export default new DataSource(databaseConfig);

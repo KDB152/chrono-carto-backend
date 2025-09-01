@@ -1,6 +1,7 @@
+import { ClassLevel } from '../entities/student.entity';
 export declare class CreateStudentDto {
     user_id: number;
-    class_level?: string;
+    class_level?: ClassLevel;
     birth_date?: Date | string;
     phone_number?: string;
     address?: string;

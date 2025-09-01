@@ -2,6 +2,16 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToOne, JoinColumn } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
+export enum ClassLevel {
+  TERMINALE_GROUPE_1 = 'Terminale groupe 1',
+  TERMINALE_GROUPE_2 = 'Terminale groupe 2',
+  TERMINALE_GROUPE_3 = 'Terminale groupe 3',
+  TERMINALE_GROUPE_4 = 'Terminale groupe 4',
+  PREMIERE_GROUPE_1 = '1ère groupe 1',
+  PREMIERE_GROUPE_2 = '1ère groupe 2',
+  PREMIERE_GROUPE_3 = '1ère groupe 3',
+}
+
 @Entity('students')
 export class Student {
   @PrimaryGeneratedColumn()
@@ -14,8 +24,12 @@ export class Student {
   @Column({ name: 'user_id', unique: true })
   user_id: number;
 
-  @Column({ nullable: true })
-  class_level: string;
+  @Column({
+    type: 'enum',
+    enum: ClassLevel,
+    nullable: true,
+  })
+  class_level: ClassLevel;
 
   @Column({ nullable: true })
   birth_date: Date;
@@ -40,4 +54,10 @@ export class Student {
 
   @Column({ nullable: true })
   parent_id: number;
+
+  @Column({ default: 0 })
+  paid_sessions: number;
+
+  @Column({ default: 0 })
+  unpaid_sessions: number;
 }

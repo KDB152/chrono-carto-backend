@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RegisterDto = void 0;
 const class_validator_1 = require("class-validator");
 const user_entity_1 = require("../../users/entities/user.entity");
+const student_entity_1 = require("../../students/entities/student.entity");
 class RegisterDto {
 }
 exports.RegisterDto = RegisterDto;
@@ -47,7 +48,7 @@ __decorate([
 ], RegisterDto.prototype, "studentBirthDate", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsEnum)(student_entity_1.ClassLevel),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "studentClass", void 0);
 __decorate([
@@ -67,7 +68,7 @@ __decorate([
 ], RegisterDto.prototype, "childBirthDate", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsEnum)(student_entity_1.ClassLevel),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "childClass", void 0);
 __decorate([

@@ -1,4 +1,5 @@
 import { UserRole } from '../../users/entities/user.entity';
+import { ClassLevel } from '../../students/entities/student.entity';
 export declare class RegisterDto {
     firstName: string;
     lastName: string;
@@ -7,11 +8,11 @@ export declare class RegisterDto {
     phone?: string;
     userType: UserRole | 'student' | 'parent';
     studentBirthDate?: string;
-    studentClass?: string;
+    studentClass?: ClassLevel;
     childFirstName?: string;
     childLastName?: string;
     childBirthDate?: string;
-    childClass?: string;
+    childClass?: ClassLevel;
     parentFirstName?: string;
     parentLastName?: string;
     parentEmail?: string;

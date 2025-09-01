@@ -1,5 +1,7 @@
+import { ClassLevel } from '../entities/student.entity';
+
 export class UpdateStudentDto {
-  class_level?: string;
+  class_level?: ClassLevel;
   birth_date?: Date | string;
   phone_number?: string;
   address?: string;
