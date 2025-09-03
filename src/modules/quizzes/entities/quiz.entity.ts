@@ -37,7 +37,7 @@ export class Quiz {
   @Column({ type: 'varchar', length: 20, default: 'Brouillon' })
   status: QuizStatus;
 
-  @Column({ type: 'simple-array', nullable: true })
+  @Column({ type: 'json', nullable: true })
   tags?: string[];
 
   @Column({ default: false })
@@ -51,6 +51,9 @@ export class Quiz {
 
   @Column({ default: false })
   randomize_questions: boolean;
+
+  @Column({ type: 'json', nullable: true })
+  target_groups?: string[]; // ex: ['Terminale groupe 1', 'Terminale groupe 2']
 
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;

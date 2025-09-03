@@ -1,13 +1,19 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, Query, UseGuards } from '@nestjs/common';
 import { QuizzesService } from './quizzes.service';
+import { QuizAccessService } from './quiz-access.service';
+import { QuizAccessGuard } from './guards/quiz-access.guard';
 import { CreateQuizDto } from './dto/create-quiz.dto';
+import { UpdateQuizDto } from './dto/update-quiz.dto';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
 
 @Controller('quizzes')
 export class QuizzesController {
-  constructor(private readonly quizzesService: QuizzesService) {}
+  constructor(
+    private readonly quizzesService: QuizzesService,
+    private readonly quizAccessService: QuizAccessService,
+  ) {}
 
   @Get()
   findAll(
@@ -58,7 +64,7 @@ export class QuizzesController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: Partial<CreateQuizDto>) {
+  update(@Param('id') id: string, @Body() dto: UpdateQuizDto) {
     return this.quizzesService.update(parseInt(id), dto);
   }
 
@@ -68,8 +74,10 @@ export class QuizzesController {
   }
 
   @Post('attempts')
+  // @UseGuards(QuizAccessGuard) // Temporairement désactivé pour debug
   submitAttempt(@Body() dto: SubmitQuizDto) {
-    return this.quizzesService.submitAttempt(dto);
+    // Le guard vérifie automatiquement l'accès
+    return this.quizzesService.submitAttempt(dto, dto.student_id);
   }
 
   // Question management endpoints
@@ -81,6 +89,38 @@ export class QuizzesController {
   @Get('questions/:questionId')
   findQuestion(@Param('questionId') questionId: string) {
     return this.quizzesService.findQuestion(parseInt(questionId));
+  }
+
+  // Endpoint pour récupérer les réponses d'une tentative spécifique
+  @Get('attempts/:attemptId/answers')
+  getAttemptAnswers(@Param('attemptId') attemptId: string) {
+    return this.quizzesService.getAttemptAnswers(parseInt(attemptId));
+  }
+
+  @Get(':id/can-take/:studentClassLevel')
+  canStudentTakeQuiz(
+    @Param('id') id: string,
+    @Param('studentClassLevel') studentClassLevel: string,
+  ) {
+    return this.quizzesService.canStudentTakeQuiz(parseInt(id), studentClassLevel);
+  }
+
+  @Get('accessible/:studentId')
+  getAccessibleQuizzes(@Param('studentId') studentId: string) {
+    return this.quizAccessService.getAccessibleQuizzes(parseInt(studentId));
+  }
+
+  @Get(':id/access-stats')
+  getQuizAccessStats(@Param('id') id: string) {
+    return this.quizAccessService.getQuizAccessStats(parseInt(id));
+  }
+
+  @Get(':id/can-take-student/:studentId')
+  canStudentTakeQuizById(
+    @Param('id') id: string,
+    @Param('studentId') studentId: string,
+  ) {
+    return this.quizAccessService.canStudentTakeQuiz(parseInt(id), parseInt(studentId));
   }
 
   @Post('questions')

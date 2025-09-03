@@ -5,9 +5,11 @@ import { Quiz } from './entities/quiz.entity';
 import { Question } from './entities/question.entity';
 import { QuizAttempt } from './entities/quiz-attempt.entity';
 import { CreateQuizDto } from './dto/create-quiz.dto';
+import { UpdateQuizDto } from './dto/update-quiz.dto';
 import { CreateQuestionDto } from './dto/create-question.dto';
 import { UpdateQuestionDto } from './dto/update-question.dto';
 import { SubmitQuizDto } from './dto/submit-quiz.dto';
+import { QuizAccessService } from './quiz-access.service';
 
 @Injectable()
 export class QuizzesService {
@@ -15,6 +17,7 @@ export class QuizzesService {
     @InjectRepository(Quiz) private readonly quizRepo: Repository<Quiz>,
     @InjectRepository(Question) private readonly questionRepo: Repository<Question>,
     @InjectRepository(QuizAttempt) private readonly attemptRepo: Repository<QuizAttempt>,
+    private readonly quizAccessService: QuizAccessService,
   ) {}
 
   async findAll({ page = 1, limit = 50, subject, level, status }: { page?: number; limit?: number; subject?: string; level?: string; status?: string; }) {
@@ -57,11 +60,12 @@ export class QuizzesService {
       allow_retake: dto.allow_retake ?? false,
       show_results: dto.show_results ?? true,
       randomize_questions: dto.randomize_questions ?? false,
+      target_groups: dto.target_groups,
     });
     return this.quizRepo.save(entity);
   }
 
-  async update(id: number, dto: Partial<CreateQuizDto>) {
+  async update(id: number, dto: UpdateQuizDto) {
     await this.quizRepo.update(id, dto as any);
     return this.findOne(id);
   }
@@ -78,14 +82,48 @@ export class QuizzesService {
 
   // Question management methods
   async findQuestions(quizId: number) {
-    return this.questionRepo.find({ 
-      where: { quiz_id: quizId },
-      order: { id: 'ASC' }
-    });
+    try {
+      // Utiliser la table quiz_questions au lieu de questions
+      const questions = await this.quizRepo.manager.query(
+        'SELECT * FROM quiz_questions WHERE quiz_id = ? ORDER BY id ASC',
+        [quizId]
+      );
+      
+      // Vérifier que questions est un tableau
+      if (!Array.isArray(questions)) {
+        console.error('Erreur: questions n\'est pas un tableau:', typeof questions);
+        return [];
+      }
+      
+      // Mapper les colonnes pour correspondre à ce que le frontend attend
+      return questions.map(q => ({
+        id: q.id,
+        question_text: q.question,        // question → question_text
+        question_type: q.type,            // type → question_type
+        points: q.points,
+        correct_answer: q.correct_answer,
+        options: q.options ? q.options.split(',') : [],
+        explanation: q.explanation
+      }));
+    } catch (error) {
+      console.error('Erreur dans findQuestions:', error);
+      return [];
+    }
   }
 
   async findQuestion(questionId: number) {
     return this.questionRepo.findOne({ where: { id: questionId } });
+  }
+
+  async canStudentTakeQuiz(quizId: number, studentClassLevel: string): Promise<boolean> {
+    const quiz = await this.findOne(quizId);
+    if (!quiz) return false;
+    
+    // Si aucun groupe cible n'est spécifié, tous les étudiants peuvent tenter le quiz
+    if (!quiz.target_groups || quiz.target_groups.length === 0) return true;
+    
+    // Vérifier si l'étudiant appartient à un des groupes cibles
+    return quiz.target_groups.includes(studentClassLevel);
   }
 
   async createQuestion(dto: CreateQuestionDto) {
@@ -154,24 +192,81 @@ export class QuizzesService {
     });
   }
 
-  async submitAttempt(dto: SubmitQuizDto) {
-    const entity = this.attemptRepo.create({
-      quiz_id: dto.quiz_id,
-      student_id: dto.student_id,
-      student_name: dto.student_name,
-      score: dto.score,
-      total_points: dto.total_points,
-      percentage: dto.percentage,
-      time_spent: dto.time_spent ?? 0,
-      answers: dto.answers ?? null,
+  async submitAttempt(dto: SubmitQuizDto, studentId?: number) {
+    // Vérification OBLIGATOIRE de l'accès au quiz
+    if (!studentId) {
+      throw new Error('ID de l\'étudiant requis pour vérifier l\'accès au quiz.');
+    }
+
+    // Vérifier si l'étudiant peut tenter ce quiz
+    const canTake = await this.quizAccessService.canStudentTakeQuiz(dto.quiz_id, studentId);
+    if (!canTake) {
+      throw new Error('Vous n\'êtes pas autorisé à tenter ce quiz. Contactez votre administrateur.');
+    }
+
+    // Utiliser mysql2 directement pour éviter les problèmes de TypeORM
+    const mysql = require('mysql2/promise');
+    
+    // Créer une connexion directe
+    const connection = await mysql.createConnection({
+      host: 'localhost',
+      user: 'root',
+      password: '',
+      database: 'chrono_carto'
     });
-    const saved = await this.attemptRepo.save(entity);
+    
+    let saved;
+    
+    try {
+      const insertQuery = `
+        INSERT INTO quiz_attempts 
+        (quiz_id, student_id, score, student_name, total_points, percentage, time_spent, completed_at, answers)
+        VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), ?)
+      `;
+      
+      const insertValues = [
+        dto.quiz_id,
+        dto.student_id,
+        dto.score,
+        dto.student_name,
+        dto.total_points,
+        dto.percentage,
+        dto.time_spent ?? 0,
+        dto.answers ? JSON.stringify(dto.answers) : null
+      ];
+      
+      // Exécuter l'insertion avec mysql2
+      const [result] = await connection.execute(insertQuery, insertValues);
+      
+      // Récupérer l'entité créée
+      saved = await this.attemptRepo.findOne({ 
+        where: { id: result.insertId } 
+      });
+    } finally {
+      await connection.end();
+    }
+    
     // update aggregate on quiz
     await this.quizRepo.createQueryBuilder()
       .update()
       .set({ attempts: () => 'attempts + 1' })
       .where('id = :id', { id: dto.quiz_id })
       .execute();
+      
     return saved;
+  }
+
+  async getAttemptAnswers(attemptId: number) {
+    const attempt = await this.attemptRepo.findOne({ 
+      where: { id: attemptId },
+      select: ['answers']
+    });
+    
+    if (!attempt) {
+      throw new Error('Tentative non trouvée');
+    }
+    
+    // Retourner les réponses de l'étudiant
+    return attempt.answers || {};
   }
 }

@@ -72,4 +72,10 @@ __decorate([
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
 ], CreateQuizDto.prototype, "randomize_questions", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    __metadata("design:type", Array)
+], CreateQuizDto.prototype, "target_groups", void 0);
 //# sourceMappingURL=create-quiz.dto.js.map

@@ -46,4 +46,9 @@ export class CreateQuizDto {
   @IsOptional()
   @IsBoolean()
   randomize_questions?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  target_groups?: string[];
 }

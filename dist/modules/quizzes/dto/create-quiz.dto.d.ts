@@ -11,4 +11,5 @@ export declare class CreateQuizDto {
     allow_retake?: boolean;
     show_results?: boolean;
     randomize_questions?: boolean;
+    target_groups?: string[];
 }

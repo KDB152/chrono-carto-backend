@@ -18,8 +18,8 @@ import { AppService } from './app.service';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
-      ...databaseConfig, // Spread existing config
-      autoLoadEntities: true, // ✅ Added this to auto-load entities from feature modules
+      ...databaseConfig,
+      autoLoadEntities: true,
     }),
     AuthModule,
     UsersModule,

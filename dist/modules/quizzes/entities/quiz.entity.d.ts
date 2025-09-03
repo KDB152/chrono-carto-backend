@@ -16,6 +16,7 @@ export declare class Quiz {
     allow_retake: boolean;
     show_results: boolean;
     randomize_questions: boolean;
+    target_groups?: string[];
     created_at: Date;
     updated_at: Date;
 }

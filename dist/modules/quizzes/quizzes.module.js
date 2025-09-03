@@ -12,16 +12,20 @@ const typeorm_1 = require("@nestjs/typeorm");
 const quiz_entity_1 = require("./entities/quiz.entity");
 const question_entity_1 = require("./entities/question.entity");
 const quiz_attempt_entity_1 = require("./entities/quiz-attempt.entity");
+const student_entity_1 = require("../students/entities/student.entity");
 const quizzes_service_1 = require("./quizzes.service");
+const quiz_access_service_1 = require("./quiz-access.service");
+const quiz_access_guard_1 = require("./guards/quiz-access.guard");
 const quizzes_controller_1 = require("./quizzes.controller");
 let QuizzesModule = class QuizzesModule {
 };
 exports.QuizzesModule = QuizzesModule;
 exports.QuizzesModule = QuizzesModule = __decorate([
     (0, common_1.Module)({
-        imports: [typeorm_1.TypeOrmModule.forFeature([quiz_entity_1.Quiz, question_entity_1.Question, quiz_attempt_entity_1.QuizAttempt])],
-        providers: [quizzes_service_1.QuizzesService],
+        imports: [typeorm_1.TypeOrmModule.forFeature([quiz_entity_1.Quiz, question_entity_1.Question, quiz_attempt_entity_1.QuizAttempt, student_entity_1.Student])],
+        providers: [quizzes_service_1.QuizzesService, quiz_access_service_1.QuizAccessService, quiz_access_guard_1.QuizAccessGuard],
         controllers: [quizzes_controller_1.QuizzesController],
+        exports: [quiz_access_service_1.QuizAccessService],
     })
 ], QuizzesModule);
 //# sourceMappingURL=quizzes.module.js.map
