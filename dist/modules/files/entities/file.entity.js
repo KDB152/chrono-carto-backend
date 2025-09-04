@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.File = void 0;
 const typeorm_1 = require("typeorm");
+const user_entity_1 = require("../../users/entities/user.entity");
 let File = class File {
 };
 exports.File = File;
@@ -19,57 +20,66 @@ __decorate([
     __metadata("design:type", Number)
 ], File.prototype, "id", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ type: 'varchar', length: 255, comment: 'Titre du fichier' }),
     __metadata("design:type", String)
-], File.prototype, "filename", void 0);
+], File.prototype, "title", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], File.prototype, "original_name", void 0);
-__decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], File.prototype, "path", void 0);
-__decorate([
-    (0, typeorm_1.Column)('bigint'),
-    __metadata("design:type", Number)
-], File.prototype, "size", void 0);
-__decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], File.prototype, "type", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ default: 'general' }),
-    __metadata("design:type", String)
-], File.prototype, "category", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
+    (0, typeorm_1.Column)({ type: 'text', nullable: true, comment: 'Description du fichier' }),
     __metadata("design:type", String)
 ], File.prototype, "description", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
+    (0, typeorm_1.Column)({ name: 'file_name', type: 'varchar', length: 255, comment: 'Nom du fichier original' }),
+    __metadata("design:type", String)
+], File.prototype, "fileName", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'stored_name', type: 'varchar', length: 255, comment: 'Nom du fichier stocké' }),
+    __metadata("design:type", String)
+], File.prototype, "storedName", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'file_path', type: 'varchar', length: 500, comment: 'Chemin du fichier sur le serveur' }),
+    __metadata("design:type", String)
+], File.prototype, "filePath", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'file_type', type: 'varchar', length: 100, comment: 'Type MIME du fichier' }),
+    __metadata("design:type", String)
+], File.prototype, "fileType", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'file_size', type: 'bigint', comment: 'Taille du fichier en octets' }),
     __metadata("design:type", Number)
-], File.prototype, "uploaded_by", void 0);
+], File.prototype, "fileSize", void 0);
 __decorate([
-    (0, typeorm_1.Column)('simple-array', { nullable: true }),
-    __metadata("design:type", Array)
-], File.prototype, "tags", void 0);
+    (0, typeorm_1.Column)({ name: 'target_class', type: 'varchar', length: 100, comment: 'Classe/groupe cible' }),
+    __metadata("design:type", String)
+], File.prototype, "targetClass", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ default: 0 }),
+    (0, typeorm_1.Column)({ name: 'uploaded_by', type: 'int', comment: 'ID de l\'utilisateur qui a uploadé le fichier' }),
     __metadata("design:type", Number)
-], File.prototype, "download_count", void 0);
+], File.prototype, "uploadedBy", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ default: true }),
+    (0, typeorm_1.Column)({ name: 'is_public', type: 'boolean', default: false, comment: 'Fichier public ou privé' }),
     __metadata("design:type", Boolean)
-], File.prototype, "is_public", void 0);
+], File.prototype, "isPublic", void 0);
 __decorate([
-    (0, typeorm_1.CreateDateColumn)(),
-    __metadata("design:type", Date)
-], File.prototype, "created_at", void 0);
+    (0, typeorm_1.Column)({ name: 'is_active', type: 'boolean', default: true, comment: 'Fichier actif ou supprimé' }),
+    __metadata("design:type", Boolean)
+], File.prototype, "isActive", void 0);
 __decorate([
-    (0, typeorm_1.UpdateDateColumn)(),
+    (0, typeorm_1.Column)({ name: 'download_count', type: 'int', default: 0, comment: 'Nombre de téléchargements' }),
+    __metadata("design:type", Number)
+], File.prototype, "downloadCount", void 0);
+__decorate([
+    (0, typeorm_1.CreateDateColumn)({ name: 'created_at', comment: 'Date d\'upload' }),
     __metadata("design:type", Date)
-], File.prototype, "updated_at", void 0);
+], File.prototype, "createdAt", void 0);
+__decorate([
+    (0, typeorm_1.UpdateDateColumn)({ name: 'updated_at', comment: 'Date de mise à jour' }),
+    __metadata("design:type", Date)
+], File.prototype, "updatedAt", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, { eager: true }),
+    (0, typeorm_1.JoinColumn)({ name: 'uploaded_by' }),
+    __metadata("design:type", user_entity_1.User)
+], File.prototype, "uploader", void 0);
 exports.File = File = __decorate([
     (0, typeorm_1.Entity)('files')
 ], File);

@@ -19,11 +19,11 @@ export class User {
   @Column({ name: 'password_hash', length: 255 })
   password_hash: string;
 
-  @Column({ name: 'first_name', length: 100, nullable: true })
-  first_name: string;
+  @Column({ name: 'first_name', type: 'varchar', length: 100, nullable: true })
+  firstName: string;
 
-  @Column({ name: 'last_name', length: 100, nullable: true })
-  last_name: string;
+  @Column({ name: 'last_name', type: 'varchar', length: 100, nullable: true })
+  lastName: string;
 
   @Column({ length: 20, nullable: true })
   phone: string;

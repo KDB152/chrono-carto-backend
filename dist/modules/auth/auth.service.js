@@ -39,7 +39,7 @@ let AuthService = class AuthService {
         this.jwtService = jwtService;
     }
     async register(registerDto) {
-        const { firstName, lastName, email, password, phone, userType } = registerDto;
+        const { first_name, last_name, email, password, phone, userType } = registerDto;
         let role;
         switch (userType) {
             case 'student':
@@ -61,8 +61,9 @@ let AuthService = class AuthService {
             const user = await this.usersService.createUser({
                 email,
                 password,
-                first_name: firstName,
-                last_name: lastName,
+                firstName: first_name,
+                lastName: last_name,
+                phone: phone,
                 role,
             });
             await this.usersService.update(user.id, { is_approved: false, is_active: false });
@@ -73,6 +74,7 @@ let AuthService = class AuthService {
                         phone_number: phone,
                         birth_date: registerDto.studentBirthDate ? new Date(registerDto.studentBirthDate) : undefined,
                         class_level: registerDto.studentClass,
+                        parent_id: null,
                     });
                     if (registerDto.parentFirstName && registerDto.parentLastName && registerDto.parentEmail) {
                         try {
@@ -80,24 +82,28 @@ let AuthService = class AuthService {
                             if (!existingParentUser) {
                                 const parentUser = await this.usersService.createUser({
                                     email: registerDto.parentEmail,
-                                    password: this.generateTemporaryPassword(),
-                                    first_name: registerDto.parentFirstName,
-                                    last_name: registerDto.parentLastName,
+                                    password: registerDto.parentPassword || this.generateTemporaryPassword(),
+                                    firstName: registerDto.parentFirstName,
+                                    lastName: registerDto.parentLastName,
+                                    phone: registerDto.parentPhone,
                                     role: user_entity_1.UserRole.PARENT,
                                     is_approved: false,
-                                    is_active: false,
+                                    is_active: true,
                                 });
                                 const parent = await this.parentsService.create({
                                     user_id: parentUser.id,
                                     phone_number: registerDto.parentPhone,
                                 });
+                                await this.studentsService.update(student.id, { parent_id: parent.id });
                                 await this.relationsService.createParentStudentRelation(parent.id, student.id);
                                 console.log(`Compte parent créé automatiquement pour l'étudiant ${user.email}`);
                             }
                             else {
                                 const existingParent = await this.parentsService.findByUserId(existingParentUser.id);
                                 if (existingParent) {
+                                    await this.studentsService.update(student.id, { parent_id: existingParent.id });
                                     await this.relationsService.createParentStudentRelation(existingParent.id, student.id);
+                                    console.log(`Relation créée entre l'étudiant ${user.email} et le parent existant ${registerDto.parentEmail}`);
                                 }
                             }
                         }
@@ -116,6 +122,32 @@ let AuthService = class AuthService {
                         user_id: user.id,
                         phone_number: phone,
                     });
+                    if (registerDto.childFirstName && registerDto.childLastName && registerDto.childPassword && registerDto.childEmail) {
+                        try {
+                            const childUser = await this.usersService.createUser({
+                                email: registerDto.childEmail,
+                                password: registerDto.childPassword,
+                                firstName: registerDto.childFirstName,
+                                lastName: registerDto.childLastName,
+                                phone: registerDto.childPhone,
+                                role: user_entity_1.UserRole.STUDENT,
+                                is_approved: false,
+                                is_active: true,
+                            });
+                            const student = await this.studentsService.create({
+                                user_id: childUser.id,
+                                phone_number: registerDto.childPhone || '',
+                                birth_date: registerDto.childBirthDate ? new Date(registerDto.childBirthDate) : undefined,
+                                class_level: registerDto.childClass,
+                                parent_id: parent.id,
+                            });
+                            await this.relationsService.createParentStudentRelation(parent.id, student.id);
+                            console.log(`Compte enfant créé automatiquement pour le parent ${user.email}`);
+                        }
+                        catch (childCreationError) {
+                            console.error('Erreur lors de la création automatique du compte enfant:', childCreationError);
+                        }
+                    }
                 }
                 catch (parentError) {
                     console.error('Erreur lors de la création du parent:', parentError);
@@ -149,10 +181,10 @@ let AuthService = class AuthService {
         }
         if (user.role !== user_entity_1.UserRole.ADMIN) {
             if (!user.email_verified) {
-                throw new common_1.UnauthorizedException('Veuillez vérifier votre email avant de vous connecter');
+                throw new common_1.UnauthorizedException('EMAIL_NOT_VERIFIED');
             }
             if (!user.is_approved) {
-                throw new common_1.UnauthorizedException("Votre compte est en attente d'approbation par un administrateur");
+                throw new common_1.UnauthorizedException('ACCOUNT_NOT_APPROVED');
             }
         }
         const payload = { email: user.email, sub: user.id, role: user.role };
@@ -161,8 +193,8 @@ let AuthService = class AuthService {
             id: user.id,
             email: user.email,
             role: user.role,
-            firstName: user.first_name,
-            lastName: user.last_name,
+            firstName: user.firstName,
+            lastName: user.lastName,
         };
         if (user.role === user_entity_1.UserRole.STUDENT) {
             const student = await this.studentsService.findByUserId(user.id);

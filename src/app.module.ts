@@ -12,6 +12,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { ContentModule } from './modules/content/content.module';
 import { MessagingModule } from './modules/messaging/messaging.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { FilesModule } from './modules/files/files.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -31,6 +32,7 @@ import { AppService } from './app.service';
     ContentModule,
     MessagingModule,
     SettingsModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

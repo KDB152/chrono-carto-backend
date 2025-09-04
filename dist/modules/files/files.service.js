@@ -17,120 +17,100 @@ const common_1 = require("@nestjs/common");
 const typeorm_1 = require("@nestjs/typeorm");
 const typeorm_2 = require("typeorm");
 const file_entity_1 = require("./entities/file.entity");
-const fs = require("fs");
 let FilesService = class FilesService {
-    constructor(fileRepository) {
-        this.fileRepository = fileRepository;
+    constructor(filesRepository) {
+        this.filesRepository = filesRepository;
     }
-    async findAll({ page = 1, limit = 50, type, category }) {
-        const queryBuilder = this.fileRepository.createQueryBuilder('file');
-        if (type) {
-            queryBuilder.andWhere('file.type = :type', { type });
-        }
-        if (category) {
-            queryBuilder.andWhere('file.category = :category', { category });
-        }
-        const [items, total] = await queryBuilder
-            .skip((page - 1) * limit)
-            .take(limit)
-            .orderBy('file.created_at', 'DESC')
-            .getManyAndCount();
-        return { items, total, page, limit };
+    async create(createFileDto, uploadedBy) {
+        const file = this.filesRepository.create({
+            ...createFileDto,
+            uploadedBy,
+        });
+        return this.filesRepository.save(file);
+    }
+    async findAll() {
+        return this.filesRepository.find({
+            where: { isActive: true },
+            relations: ['uploader'],
+            order: { createdAt: 'DESC' },
+        });
+    }
+    async findByClass(targetClass) {
+        return this.filesRepository.find({
+            where: {
+                targetClass,
+                isActive: true
+            },
+            relations: ['uploader'],
+            order: { createdAt: 'DESC' },
+        });
     }
     async findOne(id) {
-        return this.fileRepository.findOne({ where: { id } });
-    }
-    async uploadFile(file, body) {
-        const fileEntity = this.fileRepository.create({
-            filename: file.filename,
-            original_name: file.originalname,
-            path: file.path,
-            size: file.size,
-            type: file.mimetype,
-            category: body.category || 'general',
-            description: body.description,
-            uploaded_by: body.uploadedBy,
-            tags: body.tags ? JSON.parse(body.tags) : []
+        const file = await this.filesRepository.findOne({
+            where: { id, isActive: true },
+            relations: ['uploader'],
         });
-        return this.fileRepository.save(fileEntity);
+        if (!file) {
+            throw new common_1.NotFoundException(`Fichier avec l'ID ${id} non trouvé`);
+        }
+        return file;
     }
-    async update(id, updateData) {
-        await this.fileRepository.update(id, updateData);
-        return this.findOne(id);
+    async update(id, updateFileDto) {
+        const file = await this.findOne(id);
+        Object.assign(file, updateFileDto);
+        return this.filesRepository.save(file);
     }
     async remove(id) {
         const file = await this.findOne(id);
-        if (file && fs.existsSync(file.path)) {
-            fs.unlinkSync(file.path);
-        }
-        return this.fileRepository.delete(id);
+        file.isActive = false;
+        await this.filesRepository.save(file);
     }
-    async getCategories() {
-        const result = await this.fileRepository
+    async incrementDownloadCount(id) {
+        await this.filesRepository.increment({ id }, 'downloadCount', 1);
+    }
+    async getFilesByUserClass(userClass) {
+        return this.filesRepository.find({
+            where: {
+                targetClass: userClass,
+                isActive: true
+            },
+            relations: ['uploader'],
+            order: { createdAt: 'DESC' },
+        });
+    }
+    async getAvailableClasses() {
+        const result = await this.filesRepository
             .createQueryBuilder('file')
-            .select('file.category')
-            .distinct()
+            .select('DISTINCT file.targetClass', 'targetClass')
+            .where('file.isActive = :isActive', { isActive: true })
             .getRawMany();
-        return result.map(r => r.file_category);
-    }
-    async getFileTypes() {
-        const result = await this.fileRepository
-            .createQueryBuilder('file')
-            .select('file.type')
-            .distinct()
-            .getRawMany();
-        return result.map(r => r.file_type);
-    }
-    async bulkDelete(ids) {
-        const files = await this.fileRepository.findByIds(ids);
-        for (const file of files) {
-            if (fs.existsSync(file.path)) {
-                fs.unlinkSync(file.path);
-            }
-        }
-        return this.fileRepository.delete(ids);
-    }
-    async bulkMove(ids, category) {
-        return this.fileRepository.update(ids, { category });
-    }
-    async searchFiles(query) {
-        return this.fileRepository
-            .createQueryBuilder('file')
-            .where('file.original_name LIKE :query', { query: `%${query}%` })
-            .orWhere('file.description LIKE :query', { query: `%${query}%` })
-            .orderBy('file.created_at', 'DESC')
-            .getMany();
+        return result.map(row => row.targetClass);
     }
     async getFileStats() {
-        const totalFiles = await this.fileRepository.count();
-        const totalSize = await this.fileRepository
+        const totalFiles = await this.filesRepository.count({
+            where: { isActive: true }
+        });
+        const totalDownloads = await this.filesRepository
             .createQueryBuilder('file')
-            .select('SUM(file.size)', 'totalSize')
+            .select('SUM(file.downloadCount)', 'total')
+            .where('file.isActive = :isActive', { isActive: true })
             .getRawOne();
-        const categories = await this.getCategories();
-        const categoryStats = await Promise.all(categories.map(async (category) => {
-            const count = await this.fileRepository.count({ where: { category } });
-            return { category, count };
-        }));
+        const filesByClass = await this.filesRepository
+            .createQueryBuilder('file')
+            .select('file.targetClass', 'class')
+            .addSelect('COUNT(*)', 'count')
+            .where('file.isActive = :isActive', { isActive: true })
+            .groupBy('file.targetClass')
+            .getRawMany();
+        const classStats = {};
+        filesByClass.forEach(item => {
+            classStats[item.class] = parseInt(item.count);
+        });
         return {
             totalFiles,
-            totalSize: parseInt(totalSize.totalSize) || 0,
-            categories: categoryStats
+            totalDownloads: parseInt(totalDownloads.total) || 0,
+            filesByClass: classStats,
         };
-    }
-    async downloadFile(id) {
-        const file = await this.findOne(id);
-        if (!file || !fs.existsSync(file.path)) {
-            throw new Error('File not found');
-        }
-        return {
-            path: file.path,
-            filename: file.original_name,
-            type: file.type
-        };
-    }
-    async shareFile(id, users) {
-        return { success: true, sharedWith: users.length };
     }
 };
 exports.FilesService = FilesService;

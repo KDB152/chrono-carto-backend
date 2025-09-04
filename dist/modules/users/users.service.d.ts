@@ -6,8 +6,9 @@ export declare class UsersService {
     createUser(data: {
         email: string;
         password: string;
-        first_name?: string;
-        last_name?: string;
+        firstName?: string;
+        lastName?: string;
+        phone?: string;
         role?: UserRole;
         is_approved?: boolean;
         is_active?: boolean;

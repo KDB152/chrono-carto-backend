@@ -25,8 +25,8 @@ export class ParentsService {
     // Transform data to match frontend expectations
     return {
       id: parent.id,
-      firstName: parent.user?.first_name || '',
-      lastName: parent.user?.last_name || '',
+      firstName: parent.user?.firstName || '',
+      lastName: parent.user?.lastName || '',
       email: parent.user?.email || '',
       phone: parent.phone_number || '',
       address: parent.address || '',
@@ -65,8 +65,8 @@ export class ParentsService {
       console.log(`Processing parent ${parent.id} with user:`, parent.user);
       return {
         id: parent.id,
-        firstName: parent.user?.first_name || '',
-        lastName: parent.user?.last_name || '',
+        firstName: parent.user?.firstName || '',
+        lastName: parent.user?.lastName || '',
         email: parent.user?.email || '',
         phoneNumber: parent.phone_number || '',
         address: parent.address || '',

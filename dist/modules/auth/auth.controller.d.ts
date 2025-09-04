@@ -1,15 +1,18 @@
 import { Response } from 'express';
+import { Repository } from 'typeorm';
 import { AuthService } from './auth.service';
 import { EmailVerificationService } from './email-verification.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { SendVerificationCodeDto, VerifyCodeDto, VerifyTokenDto, SendPasswordResetDto, VerifyPasswordResetCodeDto, ResetPasswordDto } from './dto/verify-email.dto';
+import { User } from '../users/entities/user.entity';
 export declare class AuthController {
     private authService;
     private emailVerificationService;
+    private userRepository;
     private readonly logger;
-    constructor(authService: AuthService, emailVerificationService: EmailVerificationService);
+    constructor(authService: AuthService, emailVerificationService: EmailVerificationService, userRepository: Repository<User>);
     register(registerDto: RegisterDto): Promise<{
         message: string;
         userId: number;
@@ -23,6 +26,18 @@ export declare class AuthController {
             firstName: string;
             lastName: string;
         };
+    }>;
+    resendVerification(body: {
+        email: string;
+    }): Promise<{
+        message: string;
+    }>;
+    checkVerification(body: {
+        email: string;
+    }): Promise<{
+        verified: boolean;
+        approved: boolean;
+        message: string;
     }>;
     forgotPassword(dto: SendPasswordResetDto): Promise<{
         success: boolean;

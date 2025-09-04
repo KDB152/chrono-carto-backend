@@ -1,6 +1,8 @@
 // src/modules/auth/auth.controller.ts (VERSION AVEC DEBUG)
-import { Controller, Post, Body, Get, Logger, Query, Res, UseGuards, Request } from '@nestjs/common';  // <--- AJOUTEZ UseGuards, Request
+import { Controller, Post, Body, Get, Logger, Query, Res, UseGuards, Request, NotFoundException } from '@nestjs/common';  // <--- AJOUTEZ UseGuards, Request
 import { Response } from 'express';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { AuthService } from './auth.service';
 import { EmailVerificationService } from './email-verification.service';
 import { RegisterDto } from './dto/register.dto';
@@ -15,6 +17,7 @@ import {
   ResetPasswordDto
 } from './dto/verify-email.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';  // <--- AJOUTEZ CET IMPORT
+import { User } from '../users/entities/user.entity';
 
 @Controller('auth')
 export class AuthController {
@@ -23,6 +26,8 @@ export class AuthController {
   constructor(
     private authService: AuthService,
     private emailVerificationService: EmailVerificationService,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
 
   @Post('register')
@@ -47,6 +52,41 @@ export class AuthController {
       return result;
     } catch (error) {
       this.logger.error(`Erreur login pour ${loginDto.email}:`, error.message);
+      throw error;
+    }
+  }
+
+  @Post('resend-verification')
+  async resendVerification(@Body() body: { email: string }) {
+    this.logger.log(`Demande de renvoi de vérification pour: ${body.email}`);
+    try {
+      const result = await this.emailVerificationService.sendVerificationLink(body.email);
+      this.logger.log(`Email de vérification renvoyé pour: ${body.email}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`Erreur renvoi vérification pour ${body.email}:`, error.message);
+      throw error;
+    }
+  }
+
+  @Post('check-verification')
+  async checkVerification(@Body() body: { email: string }) {
+    this.logger.log(`Vérification du statut pour: ${body.email}`);
+    try {
+      const user = await this.userRepository.findOne({ where: { email: body.email } });
+      if (!user) {
+        throw new NotFoundException('Utilisateur non trouvé');
+      }
+      
+      return {
+        verified: user.email_verified,
+        approved: user.is_approved,
+        message: user.email_verified 
+          ? (user.is_approved ? 'Compte vérifié et approuvé' : 'Email vérifié, en attente d\'approbation')
+          : 'Email non vérifié'
+      };
+    } catch (error) {
+      this.logger.error(`Erreur vérification statut pour ${body.email}:`, error.message);
       throw error;
     }
   }

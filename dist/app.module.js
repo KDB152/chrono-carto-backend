@@ -20,6 +20,7 @@ const admin_module_1 = require("./modules/admin/admin.module");
 const content_module_1 = require("./modules/content/content.module");
 const messaging_module_1 = require("./modules/messaging/messaging.module");
 const settings_module_1 = require("./modules/settings/settings.module");
+const files_module_1 = require("./modules/files/files.module");
 const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 let AppModule = class AppModule {
@@ -42,6 +43,7 @@ exports.AppModule = AppModule = __decorate([
             content_module_1.ContentModule,
             messaging_module_1.MessagingModule,
             settings_module_1.SettingsModule,
+            files_module_1.FilesModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

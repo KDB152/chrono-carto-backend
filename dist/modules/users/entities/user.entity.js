@@ -34,13 +34,13 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "password_hash", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'first_name', length: 100, nullable: true }),
+    (0, typeorm_1.Column)({ name: 'first_name', type: 'varchar', length: 100, nullable: true }),
     __metadata("design:type", String)
-], User.prototype, "first_name", void 0);
+], User.prototype, "firstName", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'last_name', length: 100, nullable: true }),
+    (0, typeorm_1.Column)({ name: 'last_name', type: 'varchar', length: 100, nullable: true }),
     __metadata("design:type", String)
-], User.prototype, "last_name", void 0);
+], User.prototype, "lastName", void 0);
 __decorate([
     (0, typeorm_1.Column)({ length: 20, nullable: true }),
     __metadata("design:type", String)

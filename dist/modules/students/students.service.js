@@ -51,8 +51,8 @@ let StudentsService = class StudentsService {
             console.log(`Processing student ${student.id} with user:`, student.user);
             return {
                 id: student.id,
-                firstName: student.user?.first_name || '',
-                lastName: student.user?.last_name || '',
+                firstName: student.user?.firstName || '',
+                lastName: student.user?.lastName || '',
                 email: student.user?.email || '',
                 phoneNumber: student.phone_number || '',
                 classLevel: student.class_level || '',

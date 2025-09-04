@@ -73,8 +73,8 @@ let AdminService = class AdminService {
         const user = await this.usersService.createUser({
             email: payload.email,
             password: payload.password || 'changeme',
-            first_name: payload.firstName,
-            last_name: payload.lastName,
+            firstName: payload.firstName,
+            lastName: payload.lastName,
             role: user_entity_1.UserRole.STUDENT,
             is_approved: true,
         });
@@ -131,8 +131,8 @@ let AdminService = class AdminService {
         const user = await this.usersService.createUser({
             email: payload.email,
             password: payload.password || 'changeme',
-            first_name: payload.firstName,
-            last_name: payload.lastName,
+            firstName: payload.firstName,
+            lastName: payload.lastName,
             role: user_entity_1.UserRole.PARENT,
             is_approved: true,
         });

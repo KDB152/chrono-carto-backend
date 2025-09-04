@@ -27,8 +27,9 @@ let UsersService = class UsersService {
         const user = this.usersRepository.create({
             email: data.email,
             password_hash: hashedPassword,
-            first_name: data.first_name,
-            last_name: data.last_name,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            phone: data.phone,
             role: data.role ?? user_entity_1.UserRole.STUDENT,
             is_active: data.is_active ?? true,
             is_approved: data.is_approved ?? false,

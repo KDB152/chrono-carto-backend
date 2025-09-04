@@ -1,43 +1,24 @@
 import { Repository } from 'typeorm';
 import { File } from './entities/file.entity';
+import { CreateFileDto } from './dto/create-file.dto';
+import { UpdateFileDto } from './dto/update-file.dto';
 export declare class FilesService {
-    private fileRepository;
-    constructor(fileRepository: Repository<File>);
-    findAll({ page, limit, type, category }: {
-        page?: number;
-        limit?: number;
-        type?: string;
-        category?: string;
-    }): Promise<{
-        items: File[];
-        total: number;
-        page: number;
-        limit: number;
-    }>;
+    private filesRepository;
+    constructor(filesRepository: Repository<File>);
+    create(createFileDto: CreateFileDto, uploadedBy: number): Promise<File>;
+    findAll(): Promise<File[]>;
+    findByClass(targetClass: string): Promise<File[]>;
     findOne(id: number): Promise<File>;
-    uploadFile(file: Express.Multer.File, body: any): Promise<File>;
-    update(id: number, updateData: any): Promise<File>;
-    remove(id: number): Promise<import("typeorm").DeleteResult>;
-    getCategories(): Promise<any[]>;
-    getFileTypes(): Promise<any[]>;
-    bulkDelete(ids: number[]): Promise<import("typeorm").DeleteResult>;
-    bulkMove(ids: number[], category: string): Promise<import("typeorm").UpdateResult>;
-    searchFiles(query: string): Promise<File[]>;
+    update(id: number, updateFileDto: UpdateFileDto): Promise<File>;
+    remove(id: number): Promise<void>;
+    incrementDownloadCount(id: number): Promise<void>;
+    getFilesByUserClass(userClass: string): Promise<File[]>;
+    getAvailableClasses(): Promise<string[]>;
     getFileStats(): Promise<{
         totalFiles: number;
-        totalSize: number;
-        categories: {
-            category: any;
-            count: number;
-        }[];
-    }>;
-    downloadFile(id: number): Promise<{
-        path: string;
-        filename: string;
-        type: string;
-    }>;
-    shareFile(id: number, users: number[]): Promise<{
-        success: boolean;
-        sharedWith: number;
+        totalDownloads: number;
+        filesByClass: {
+            [key: string]: number;
+        };
     }>;
 }

@@ -78,8 +78,8 @@ export class AdminService {
     const user = await this.usersService.createUser({
       email: payload.email,
       password: payload.password || 'changeme',
-      first_name: payload.firstName,
-      last_name: payload.lastName,
+      firstName: payload.firstName,
+      lastName: payload.lastName,
       role: UserRole.STUDENT,
       is_approved: true, // Auto-approve users created by admin
     });
@@ -150,8 +150,8 @@ export class AdminService {
     const user = await this.usersService.createUser({
       email: payload.email,
       password: payload.password || 'changeme',
-      first_name: payload.firstName,
-      last_name: payload.lastName,
+      firstName: payload.firstName,
+      lastName: payload.lastName,
       role: UserRole.PARENT,
       is_approved: true, // Auto-approve users created by admin
     });

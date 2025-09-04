@@ -120,7 +120,7 @@ let MessagingService = class MessagingService {
         });
         const contacts = await this.userRepository.find({
             where: { id: (0, typeorm_2.In)(Array.from(contactIds)) },
-            select: ['id', 'first_name', 'last_name', 'email', 'role']
+            select: ['id', 'firstName', 'lastName', 'email', 'role']
         });
         return contacts;
     }
@@ -139,10 +139,10 @@ let MessagingService = class MessagingService {
                 is_active: true,
                 id: (0, typeorm_2.Not)(currentUserId)
             },
-            select: ['id', 'first_name', 'last_name', 'email', 'role'],
+            select: ['id', 'firstName', 'lastName', 'email', 'role'],
             order: {
-                first_name: 'ASC',
-                last_name: 'ASC'
+                firstName: 'ASC',
+                lastName: 'ASC'
             }
         });
     }

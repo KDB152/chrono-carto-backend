@@ -8,8 +8,8 @@ export declare class User {
     id: number;
     email: string;
     password_hash: string;
-    first_name: string;
-    last_name: string;
+    firstName: string;
+    lastName: string;
     phone: string;
     role: UserRole;
     is_active: boolean;

@@ -19,7 +19,8 @@ transporter.verify((error, success) => {
     }
 });
 async function sendVerificationEmail(to, token) {
-    const url = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
+    const backendUrl = process.env.BACKEND_URL || 'http://localhost:3001';
+    const url = `${backendUrl}/auth/verify-token?token=${token}`;
     try {
         const info = await transporter.sendMail({
             from: `"Chrono Carto" <${process.env.EMAIL_USER}>`,

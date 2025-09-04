@@ -1,16 +1,19 @@
+import { User } from '../../users/entities/user.entity';
 export declare class File {
     id: number;
-    filename: string;
-    original_name: string;
-    path: string;
-    size: number;
-    type: string;
-    category: string;
+    title: string;
     description: string;
-    uploaded_by: number;
-    tags: string[];
-    download_count: number;
-    is_public: boolean;
-    created_at: Date;
-    updated_at: Date;
+    fileName: string;
+    storedName: string;
+    filePath: string;
+    fileType: string;
+    fileSize: number;
+    targetClass: string;
+    uploadedBy: number;
+    isPublic: boolean;
+    isActive: boolean;
+    downloadCount: number;
+    createdAt: Date;
+    updatedAt: Date;
+    uploader: User;
 }

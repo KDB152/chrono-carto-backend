@@ -15,6 +15,8 @@ var AuthController_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
+const typeorm_1 = require("@nestjs/typeorm");
+const typeorm_2 = require("typeorm");
 const auth_service_1 = require("./auth.service");
 const email_verification_service_1 = require("./email-verification.service");
 const register_dto_1 = require("./dto/register.dto");
@@ -22,10 +24,12 @@ const login_dto_1 = require("./dto/login.dto");
 const change_password_dto_1 = require("./dto/change-password.dto");
 const verify_email_dto_1 = require("./dto/verify-email.dto");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
+const user_entity_1 = require("../users/entities/user.entity");
 let AuthController = AuthController_1 = class AuthController {
-    constructor(authService, emailVerificationService) {
+    constructor(authService, emailVerificationService, userRepository) {
         this.authService = authService;
         this.emailVerificationService = emailVerificationService;
+        this.userRepository = userRepository;
         this.logger = new common_1.Logger(AuthController_1.name);
     }
     async register(registerDto) {
@@ -49,6 +53,38 @@ let AuthController = AuthController_1 = class AuthController {
         }
         catch (error) {
             this.logger.error(`Erreur login pour ${loginDto.email}:`, error.message);
+            throw error;
+        }
+    }
+    async resendVerification(body) {
+        this.logger.log(`Demande de renvoi de vérification pour: ${body.email}`);
+        try {
+            const result = await this.emailVerificationService.sendVerificationLink(body.email);
+            this.logger.log(`Email de vérification renvoyé pour: ${body.email}`);
+            return result;
+        }
+        catch (error) {
+            this.logger.error(`Erreur renvoi vérification pour ${body.email}:`, error.message);
+            throw error;
+        }
+    }
+    async checkVerification(body) {
+        this.logger.log(`Vérification du statut pour: ${body.email}`);
+        try {
+            const user = await this.userRepository.findOne({ where: { email: body.email } });
+            if (!user) {
+                throw new common_1.NotFoundException('Utilisateur non trouvé');
+            }
+            return {
+                verified: user.email_verified,
+                approved: user.is_approved,
+                message: user.email_verified
+                    ? (user.is_approved ? 'Compte vérifié et approuvé' : 'Email vérifié, en attente d\'approbation')
+                    : 'Email non vérifié'
+            };
+        }
+        catch (error) {
+            this.logger.error(`Erreur vérification statut pour ${body.email}:`, error.message);
             throw error;
         }
     }
@@ -287,6 +323,20 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
+    (0, common_1.Post)('resend-verification'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "resendVerification", null);
+__decorate([
+    (0, common_1.Post)('check-verification'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "checkVerification", null);
+__decorate([
     (0, common_1.Post)('forgot-password'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -387,7 +437,9 @@ __decorate([
 ], AuthController.prototype, "checkEnvironment", null);
 exports.AuthController = AuthController = AuthController_1 = __decorate([
     (0, common_1.Controller)('auth'),
+    __param(2, (0, typeorm_1.InjectRepository)(user_entity_1.User)),
     __metadata("design:paramtypes", [auth_service_1.AuthService,
-        email_verification_service_1.EmailVerificationService])
+        email_verification_service_1.EmailVerificationService,
+        typeorm_2.Repository])
 ], AuthController);
 //# sourceMappingURL=auth.controller.js.map

@@ -19,11 +19,11 @@ exports.RegisterDto = RegisterDto;
 __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], RegisterDto.prototype, "firstName", void 0);
+], RegisterDto.prototype, "first_name", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], RegisterDto.prototype, "lastName", void 0);
+], RegisterDto.prototype, "last_name", void 0);
 __decorate([
     (0, class_validator_1.IsEmail)(),
     __metadata("design:type", String)
@@ -91,4 +91,24 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], RegisterDto.prototype, "parentPhone", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "parentPassword", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "childPassword", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEmail)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "childEmail", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], RegisterDto.prototype, "childPhone", void 0);
 //# sourceMappingURL=register.dto.js.map

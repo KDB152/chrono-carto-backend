@@ -139,7 +139,7 @@ export class MessagingService {
     // Récupérer les informations des utilisateurs
     const contacts = await this.userRepository.find({
       where: { id: In(Array.from(contactIds)) },
-      select: ['id', 'first_name', 'last_name', 'email', 'role']
+      select: ['id', 'firstName', 'lastName', 'email', 'role']
     });
 
     return contacts;
@@ -162,10 +162,10 @@ export class MessagingService {
         is_active: true,
         id: Not(currentUserId)
       },
-      select: ['id', 'first_name', 'last_name', 'email', 'role'],
+      select: ['id', 'firstName', 'lastName', 'email', 'role'],
       order: {
-        first_name: 'ASC',
-        last_name: 'ASC'
+        firstName: 'ASC',
+        lastName: 'ASC'
       }
     });
   }

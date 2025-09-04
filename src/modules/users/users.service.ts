@@ -15,8 +15,9 @@ export class UsersService {
   async createUser(data: {
     email: string;
     password: string;
-    first_name?: string;
-    last_name?: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
     role?: UserRole;
     is_approved?: boolean;
     is_active?: boolean;
@@ -26,8 +27,9 @@ export class UsersService {
     const user = this.usersRepository.create({
       email: data.email,
       password_hash: hashedPassword,
-      first_name: data.first_name,
-      last_name: data.last_name,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      phone: data.phone,
       role: data.role ?? UserRole.STUDENT,
       is_active: data.is_active ?? true,
       is_approved: data.is_approved ?? false,
