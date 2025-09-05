@@ -13,4 +13,16 @@ export class SendMessageDto {
   @IsEnum(['text', 'image', 'file', 'audio'])
   @IsOptional()
   messageType?: 'text' | 'image' | 'file' | 'audio';
+
+  @IsString()
+  @IsOptional()
+  filePath?: string;
+
+  @IsString()
+  @IsOptional()
+  fileName?: string;
+
+  @IsString()
+  @IsOptional()
+  fileType?: string;
 }

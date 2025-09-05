@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsNumber } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsBoolean, IsNumber, IsArray } from 'class-validator';
 
 export class CreateFileDto {
   @IsString()
@@ -29,9 +29,13 @@ export class CreateFileDto {
   @IsNotEmpty()
   fileSize: number;
 
-  @IsString()
   @IsNotEmpty()
-  targetClass: string;
+  targetClass: string | string[];
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  targetClasses?: string[];
 
   @IsBoolean()
   @IsOptional()

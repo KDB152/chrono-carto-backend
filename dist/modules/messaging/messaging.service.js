@@ -54,12 +54,18 @@ let MessagingService = class MessagingService {
             order: { created_at: 'ASC' }
         });
     }
+    async getMessage(messageId) {
+        return this.messageRepository.findOne({
+            where: { id: messageId }
+        });
+    }
     async sendMessage(dto) {
         const message = this.messageRepository.create({
             conversation_id: dto.conversationId,
             sender_id: dto.senderId,
             content: dto.content,
-            message_type: dto.messageType || 'text'
+            message_type: dto.messageType || 'text',
+            file_path: dto.filePath || null
         });
         const savedMessage = await this.messageRepository.save(message);
         await this.conversationRepository.update(dto.conversationId, {
@@ -132,6 +138,30 @@ let MessagingService = class MessagingService {
             .orderBy('message.created_at', 'ASC')
             .getMany();
     }
+    async uploadFile(file, userId) {
+        const fs = require('fs');
+        const path = require('path');
+        const uploadsDir = path.join(process.cwd(), 'uploads', 'messages');
+        if (!fs.existsSync(uploadsDir)) {
+            fs.mkdirSync(uploadsDir, { recursive: true });
+        }
+        const fileExtension = path.extname(file.originalname);
+        const fileName = path.basename(file.originalname, fileExtension);
+        const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(2, 8);
+        const storedName = `message-${timestamp}-${randomSuffix}-${fileName}${fileExtension}`;
+        const filePath = path.join('uploads', 'messages', storedName);
+        const fullPath = path.join(process.cwd(), filePath);
+        fs.writeFileSync(fullPath, file.buffer);
+        console.log('✅ Fichier de message sauvegardé:', fullPath);
+        return {
+            fileName: file.originalname,
+            storedName,
+            filePath,
+            fileType: file.mimetype,
+            fileSize: file.size
+        };
+    }
     async getAvailableRecipients(currentUserId) {
         return this.userRepository.find({
             where: {
@@ -182,44 +212,6 @@ let MessagingService = class MessagingService {
         }
         catch (error) {
             console.error('Error in createOrGetConversation:', error);
-            throw error;
-        }
-    }
-    async uploadFile(file, body) {
-        try {
-            if (!file) {
-                throw new Error('No file uploaded');
-            }
-            if (!body.conversationId || !body.senderId) {
-                throw new Error('conversationId and senderId are required');
-            }
-            const conversationId = parseInt(body.conversationId);
-            const senderId = parseInt(body.senderId);
-            const conversation = await this.conversationRepository.findOne({
-                where: { id: conversationId }
-            });
-            if (!conversation) {
-                throw new Error('Conversation not found');
-            }
-            if (conversation.participant1_id !== senderId && conversation.participant2_id !== senderId) {
-                throw new Error('Sender is not a participant in this conversation');
-            }
-            const message = this.messageRepository.create({
-                conversation_id: conversationId,
-                sender_id: senderId,
-                content: file.originalname,
-                message_type: 'file',
-                file_path: file.path
-            });
-            const savedMessage = await this.messageRepository.save(message);
-            await this.conversationRepository.update(conversationId, {
-                last_message_id: savedMessage.id,
-                updated_at: new Date()
-            });
-            return savedMessage;
-        }
-        catch (error) {
-            console.error('Error uploading file:', error);
             throw error;
         }
     }

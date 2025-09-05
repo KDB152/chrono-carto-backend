@@ -51,12 +51,19 @@ export class MessagingService {
     });
   }
 
+  async getMessage(messageId: number) {
+    return this.messageRepository.findOne({
+      where: { id: messageId }
+    });
+  }
+
   async sendMessage(dto: SendMessageDto) {
     const message = this.messageRepository.create({
       conversation_id: dto.conversationId,
       sender_id: dto.senderId,
       content: dto.content,
-      message_type: dto.messageType || 'text'
+      message_type: dto.messageType || 'text',
+      file_path: dto.filePath || null
     });
 
     const savedMessage = await this.messageRepository.save(message);
@@ -154,6 +161,39 @@ export class MessagingService {
       .getMany();
   }
 
+  async uploadFile(file: Express.Multer.File, userId: number) {
+    const fs = require('fs');
+    const path = require('path');
+    
+    // Créer le dossier uploads/messages s'il n'existe pas
+    const uploadsDir = path.join(process.cwd(), 'uploads', 'messages');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    // Générer un nom de fichier unique
+    const fileExtension = path.extname(file.originalname);
+    const fileName = path.basename(file.originalname, fileExtension);
+    const timestamp = Date.now();
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    const storedName = `message-${timestamp}-${randomSuffix}-${fileName}${fileExtension}`;
+    const filePath = path.join('uploads', 'messages', storedName);
+
+    // Sauvegarder le fichier
+    const fullPath = path.join(process.cwd(), filePath);
+    fs.writeFileSync(fullPath, file.buffer);
+
+    console.log('✅ Fichier de message sauvegardé:', fullPath);
+
+    return {
+      fileName: file.originalname,
+      storedName,
+      filePath,
+      fileType: file.mimetype,
+      fileSize: file.size
+    };
+  }
+
   async getAvailableRecipients(currentUserId: number) {
     // Récupérer tous les utilisateurs approuvés sauf l'utilisateur actuel
     return this.userRepository.find({
@@ -218,56 +258,4 @@ export class MessagingService {
     }
   }
 
-  async uploadFile(file: Express.Multer.File, body: any) {
-    try {
-      // Validate file
-      if (!file) {
-        throw new Error('No file uploaded');
-      }
-
-      // Validate required fields
-      if (!body.conversationId || !body.senderId) {
-        throw new Error('conversationId and senderId are required');
-      }
-
-      const conversationId = parseInt(body.conversationId);
-      const senderId = parseInt(body.senderId);
-
-      // Verify conversation exists
-      const conversation = await this.conversationRepository.findOne({
-        where: { id: conversationId }
-      });
-
-      if (!conversation) {
-        throw new Error('Conversation not found');
-      }
-
-      // Verify sender is participant in conversation
-      if (conversation.participant1_id !== senderId && conversation.participant2_id !== senderId) {
-        throw new Error('Sender is not a participant in this conversation');
-      }
-
-      // Create message with file
-      const message = this.messageRepository.create({
-        conversation_id: conversationId,
-        sender_id: senderId,
-        content: file.originalname, // Use original filename as content
-        message_type: 'file',
-        file_path: file.path // Store the file path
-      });
-
-      const savedMessage = await this.messageRepository.save(message);
-
-      // Update conversation's last message and timestamp
-      await this.conversationRepository.update(conversationId, {
-        last_message_id: savedMessage.id,
-        updated_at: new Date()
-      });
-
-      return savedMessage;
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      throw error;
-    }
-  }
 }

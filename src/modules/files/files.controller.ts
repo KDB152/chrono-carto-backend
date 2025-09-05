@@ -48,20 +48,44 @@ export class FilesController {
     @Body('targetClass') targetClass: string,
     @Request() req
   ) {
-    if (req.user.role !== UserRole.ADMIN) {
-      throw new BadRequestException('Seuls les administrateurs peuvent uploader des fichiers');
-    }
+    try {
+      console.log('📤 Upload de fichier - Données reçues:', {
+        title,
+        description,
+        targetClass,
+        fileName: file?.originalname,
+        fileSize: file?.size,
+        userRole: req.user?.role
+      });
 
-    if (!file) {
-      throw new BadRequestException('Aucun fichier fourni');
-    }
+      if (req.user.role !== UserRole.ADMIN) {
+        throw new BadRequestException('Seuls les administrateurs peuvent uploader des fichiers');
+      }
 
-    if (!title) {
-      throw new BadRequestException('Le titre est requis');
-    }
+      if (!file) {
+        throw new BadRequestException('Aucun fichier fourni');
+      }
 
-    if (!targetClass) {
-      throw new BadRequestException('La classe cible est requise');
+      if (!title) {
+        throw new BadRequestException('Le titre est requis');
+      }
+
+      if (!targetClass) {
+        throw new BadRequestException('Les classes cibles sont requises');
+      }
+
+    // Parser les classes cibles (peuvent être un string ou un JSON array)
+    let targetClasses: string[];
+    try {
+      targetClasses = JSON.parse(targetClass);
+      if (!Array.isArray(targetClasses)) {
+        throw new Error('Invalid format');
+      }
+      console.log('✅ Classes cibles parsées (JSON):', targetClasses);
+    } catch (error) {
+      // Si ce n'est pas du JSON valide, traiter comme une seule classe
+      targetClasses = [targetClass];
+      console.log('✅ Classes cibles parsées (string):', targetClasses);
     }
 
     // Créer le dossier uploads s'il n'existe pas
@@ -93,17 +117,29 @@ export class FilesController {
       filePath,
       fileType: file.mimetype,
       fileSize: file.size,
-      targetClass,
+      targetClass: targetClasses, // Array de classes
+      targetClasses: targetClasses, // Array de classes pour le nouveau format
       isPublic: true
     };
 
-    const createdFile = await this.filesService.create(createFileDto, req.user.id);
+    console.log('📝 Création du DTO:', {
+      title: createFileDto.title,
+      targetClass: createFileDto.targetClass,
+      targetClasses: createFileDto.targetClasses
+    });
 
-    return {
-      success: true,
-      file: createdFile,
-      filePath
-    };
+    const createdFile = await this.filesService.create(createFileDto, req.user.id);
+    console.log('✅ Fichier créé en base:', createdFile.id);
+
+      return {
+        success: true,
+        file: createdFile,
+        filePath
+      };
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'upload:', error);
+      throw new BadRequestException(`Erreur lors de l'upload: ${error.message}`);
+    }
   }
 
   @Get()
@@ -191,10 +227,6 @@ export class FilesController {
     // Incrémenter le compteur de téléchargements
     await this.filesService.incrementDownloadCount(+id);
 
-    // Définir les headers pour le téléchargement
-    res.setHeader('Content-Type', file.fileType || 'application/octet-stream');
-    res.setHeader('Content-Disposition', `attachment; filename="${file.fileName}"`);
-    
     // Obtenir la taille réelle du fichier et vérifier l'intégrité
     const stats = fs.statSync(filePath);
     
@@ -208,11 +240,38 @@ export class FilesController {
       await this.filesService.update(+id, { fileSize: stats.size });
       console.log(`✅ Taille mise à jour en base de données`);
     }
-    
-    res.setHeader('Content-Length', stats.size);
 
-    // Envoyer le fichier
+    // Définir les headers pour le téléchargement
+    // Pour les fichiers exécutables, utiliser application/octet-stream pour éviter les problèmes de sécurité
+    let contentType = file.fileType || 'application/octet-stream';
+    if (file.fileType === 'application/x-msdownload' || file.fileName.endsWith('.exe')) {
+      contentType = 'application/octet-stream';
+    }
+    
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Length', stats.size);
+    
+    // Encoder le nom de fichier pour éviter les problèmes avec les caractères spéciaux
+    const encodedFileName = encodeURIComponent(file.fileName);
+    // Utiliser les deux formats pour une meilleure compatibilité
+    res.setHeader('Content-Disposition', `attachment; filename="${file.fileName}"; filename*=UTF-8''${encodedFileName}`);
+    
+    // Headers supplémentaires pour les fichiers binaires
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    console.log(`📥 Téléchargement du fichier: ${file.fileName} (${stats.size} bytes)`);
+
+    // Envoyer le fichier avec gestion d'erreur
     const fileStream = fs.createReadStream(filePath);
+    fileStream.on('error', (error) => {
+      console.error('❌ Erreur lors de la lecture du fichier:', error);
+      if (!res.headersSent) {
+        res.status(500).json({ message: 'Erreur lors de la lecture du fichier' });
+      }
+    });
+    
     fileStream.pipe(res);
   }
 

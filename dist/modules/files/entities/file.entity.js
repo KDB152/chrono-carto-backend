@@ -48,9 +48,13 @@ __decorate([
     __metadata("design:type", Number)
 ], File.prototype, "fileSize", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ name: 'target_class', type: 'varchar', length: 100, comment: 'Classe/groupe cible' }),
+    (0, typeorm_1.Column)({ name: 'target_class', type: 'json', comment: 'Classe/groupe cible (ancien format)', nullable: true }),
     __metadata("design:type", String)
 ], File.prototype, "targetClass", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ name: 'target_classes', type: 'json', comment: 'Classes/groupes cibles (array JSON)', nullable: true }),
+    __metadata("design:type", Array)
+], File.prototype, "targetClasses", void 0);
 __decorate([
     (0, typeorm_1.Column)({ name: 'uploaded_by', type: 'int', comment: 'ID de l\'utilisateur qui a uploadé le fichier' }),
     __metadata("design:type", Number)

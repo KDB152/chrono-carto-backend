@@ -33,48 +33,81 @@ let FilesController = class FilesController {
         return this.filesService.create(createFileDto, req.user.id);
     }
     async uploadFile(file, title, description, targetClass, req) {
-        if (req.user.role !== user_entity_1.UserRole.ADMIN) {
-            throw new common_1.BadRequestException('Seuls les administrateurs peuvent uploader des fichiers');
+        try {
+            console.log('📤 Upload de fichier - Données reçues:', {
+                title,
+                description,
+                targetClass,
+                fileName: file?.originalname,
+                fileSize: file?.size,
+                userRole: req.user?.role
+            });
+            if (req.user.role !== user_entity_1.UserRole.ADMIN) {
+                throw new common_1.BadRequestException('Seuls les administrateurs peuvent uploader des fichiers');
+            }
+            if (!file) {
+                throw new common_1.BadRequestException('Aucun fichier fourni');
+            }
+            if (!title) {
+                throw new common_1.BadRequestException('Le titre est requis');
+            }
+            if (!targetClass) {
+                throw new common_1.BadRequestException('Les classes cibles sont requises');
+            }
+            let targetClasses;
+            try {
+                targetClasses = JSON.parse(targetClass);
+                if (!Array.isArray(targetClasses)) {
+                    throw new Error('Invalid format');
+                }
+                console.log('✅ Classes cibles parsées (JSON):', targetClasses);
+            }
+            catch (error) {
+                targetClasses = [targetClass];
+                console.log('✅ Classes cibles parsées (string):', targetClasses);
+            }
+            const uploadsDir = path.join(process.cwd(), 'uploads');
+            if (!fs.existsSync(uploadsDir)) {
+                fs.mkdirSync(uploadsDir, { recursive: true });
+            }
+            const fileExtension = path.extname(file.originalname);
+            const fileName = path.basename(file.originalname, fileExtension);
+            const timestamp = Date.now();
+            const randomSuffix = Math.random().toString(36).substring(2, 8);
+            const storedName = `file-${timestamp}-${randomSuffix}-${fileName}${fileExtension}`;
+            const filePath = path.join('uploads', storedName);
+            const fullPath = path.join(process.cwd(), filePath);
+            fs.writeFileSync(fullPath, file.buffer);
+            console.log('✅ Fichier sauvegardé:', fullPath);
+            const createFileDto = {
+                title,
+                description: description || '',
+                fileName: file.originalname,
+                storedName,
+                filePath,
+                fileType: file.mimetype,
+                fileSize: file.size,
+                targetClass: targetClasses,
+                targetClasses: targetClasses,
+                isPublic: true
+            };
+            console.log('📝 Création du DTO:', {
+                title: createFileDto.title,
+                targetClass: createFileDto.targetClass,
+                targetClasses: createFileDto.targetClasses
+            });
+            const createdFile = await this.filesService.create(createFileDto, req.user.id);
+            console.log('✅ Fichier créé en base:', createdFile.id);
+            return {
+                success: true,
+                file: createdFile,
+                filePath
+            };
         }
-        if (!file) {
-            throw new common_1.BadRequestException('Aucun fichier fourni');
+        catch (error) {
+            console.error('❌ Erreur lors de l\'upload:', error);
+            throw new common_1.BadRequestException(`Erreur lors de l'upload: ${error.message}`);
         }
-        if (!title) {
-            throw new common_1.BadRequestException('Le titre est requis');
-        }
-        if (!targetClass) {
-            throw new common_1.BadRequestException('La classe cible est requise');
-        }
-        const uploadsDir = path.join(process.cwd(), 'uploads');
-        if (!fs.existsSync(uploadsDir)) {
-            fs.mkdirSync(uploadsDir, { recursive: true });
-        }
-        const fileExtension = path.extname(file.originalname);
-        const fileName = path.basename(file.originalname, fileExtension);
-        const timestamp = Date.now();
-        const randomSuffix = Math.random().toString(36).substring(2, 8);
-        const storedName = `file-${timestamp}-${randomSuffix}-${fileName}${fileExtension}`;
-        const filePath = path.join('uploads', storedName);
-        const fullPath = path.join(process.cwd(), filePath);
-        fs.writeFileSync(fullPath, file.buffer);
-        console.log('✅ Fichier sauvegardé:', fullPath);
-        const createFileDto = {
-            title,
-            description: description || '',
-            fileName: file.originalname,
-            storedName,
-            filePath,
-            fileType: file.mimetype,
-            fileSize: file.size,
-            targetClass,
-            isPublic: true
-        };
-        const createdFile = await this.filesService.create(createFileDto, req.user.id);
-        return {
-            success: true,
-            file: createdFile,
-            filePath
-        };
     }
     async findAll(req, targetClass) {
         if (req.user.role === user_entity_1.UserRole.ADMIN) {
@@ -126,8 +159,6 @@ let FilesController = class FilesController {
             throw new common_1.BadRequestException('Fichier non trouvé sur le serveur. Veuillez contacter l\'administrateur.');
         }
         await this.filesService.incrementDownloadCount(+id);
-        res.setHeader('Content-Type', file.fileType || 'application/octet-stream');
-        res.setHeader('Content-Disposition', `attachment; filename="${file.fileName}"`);
         const stats = fs.statSync(filePath);
         if (stats.size !== file.fileSize) {
             console.log(`⚠️ Incohérence de taille détectée pour le fichier ${file.id}:`);
@@ -136,8 +167,25 @@ let FilesController = class FilesController {
             await this.filesService.update(+id, { fileSize: stats.size });
             console.log(`✅ Taille mise à jour en base de données`);
         }
+        let contentType = file.fileType || 'application/octet-stream';
+        if (file.fileType === 'application/x-msdownload' || file.fileName.endsWith('.exe')) {
+            contentType = 'application/octet-stream';
+        }
+        res.setHeader('Content-Type', contentType);
         res.setHeader('Content-Length', stats.size);
+        const encodedFileName = encodeURIComponent(file.fileName);
+        res.setHeader('Content-Disposition', `attachment; filename="${file.fileName}"; filename*=UTF-8''${encodedFileName}`);
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        console.log(`📥 Téléchargement du fichier: ${file.fileName} (${stats.size} bytes)`);
         const fileStream = fs.createReadStream(filePath);
+        fileStream.on('error', (error) => {
+            console.error('❌ Erreur lors de la lecture du fichier:', error);
+            if (!res.headersSent) {
+                res.status(500).json({ message: 'Erreur lors de la lecture du fichier' });
+            }
+        });
         fileStream.pipe(res);
     }
     async update(id, updateFileDto, req) {

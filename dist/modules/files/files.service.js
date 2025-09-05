@@ -22,8 +22,13 @@ let FilesService = class FilesService {
         this.filesRepository = filesRepository;
     }
     async create(createFileDto, uploadedBy) {
+        const normalizedTargetClasses = Array.isArray(createFileDto.targetClass)
+            ? createFileDto.targetClass
+            : [createFileDto.targetClass];
         const file = this.filesRepository.create({
             ...createFileDto,
+            targetClass: JSON.stringify(normalizedTargetClasses[0]),
+            targetClasses: normalizedTargetClasses,
             uploadedBy,
         });
         return this.filesRepository.save(file);
@@ -36,13 +41,48 @@ let FilesService = class FilesService {
         });
     }
     async findByClass(targetClass) {
-        return this.filesRepository.find({
-            where: {
-                targetClass,
-                isActive: true
-            },
+        const allFiles = await this.filesRepository.find({
+            where: { isActive: true },
             relations: ['uploader'],
             order: { createdAt: 'DESC' },
+        });
+        return allFiles.filter(file => {
+            if (file.targetClasses) {
+                try {
+                    let targetClasses = file.targetClasses;
+                    if (typeof targetClasses === 'string') {
+                        targetClasses = JSON.parse(targetClasses);
+                    }
+                    if (Array.isArray(targetClasses) && targetClasses.length > 0 && Array.isArray(targetClasses[0])) {
+                        targetClasses = targetClasses[0];
+                    }
+                    if (Array.isArray(targetClasses) && targetClasses.length > 0 && typeof targetClasses[0] === 'string' && targetClasses[0].startsWith('[')) {
+                        const innerParsed = JSON.parse(targetClasses[0]);
+                        if (Array.isArray(innerParsed)) {
+                            targetClasses = innerParsed;
+                        }
+                    }
+                    if (Array.isArray(targetClasses)) {
+                        return targetClasses.includes(targetClass);
+                    }
+                }
+                catch (error) {
+                    console.warn(`Erreur parsing targetClasses pour fichier ${file.id}:`, error);
+                }
+            }
+            if (file.targetClass) {
+                try {
+                    const parsed = JSON.parse(file.targetClass);
+                    if (Array.isArray(parsed)) {
+                        return parsed.includes(targetClass);
+                    }
+                }
+                catch (e) {
+                    return file.targetClass === targetClass;
+                }
+                return file.targetClass === targetClass;
+            }
+            return false;
         });
     }
     async findOne(id) {
@@ -57,25 +97,86 @@ let FilesService = class FilesService {
     }
     async update(id, updateFileDto) {
         const file = await this.findOne(id);
+        if (updateFileDto.targetClasses && Array.isArray(updateFileDto.targetClasses)) {
+            const normalizedTargetClasses = updateFileDto.targetClasses.filter(cls => typeof cls === 'string');
+            file.targetClass = JSON.stringify(normalizedTargetClasses[0] || '');
+            file.targetClasses = normalizedTargetClasses;
+            delete updateFileDto.targetClass;
+            delete updateFileDto.targetClasses;
+        }
+        else if (updateFileDto.targetClass) {
+            file.targetClass = JSON.stringify(updateFileDto.targetClass);
+            file.targetClasses = [updateFileDto.targetClass];
+            delete updateFileDto.targetClass;
+        }
         Object.assign(file, updateFileDto);
+        console.log(`📝 Mise à jour du fichier ID ${id}:`, {
+            title: file.title,
+            targetClass: file.targetClass,
+            targetClasses: file.targetClasses
+        });
         return this.filesRepository.save(file);
     }
     async remove(id) {
         const file = await this.findOne(id);
-        file.isActive = false;
-        await this.filesRepository.save(file);
+        try {
+            if (file.filePath && require('fs').existsSync(file.filePath)) {
+                require('fs').unlinkSync(file.filePath);
+                console.log(`🗑️ Fichier physique supprimé: ${file.filePath}`);
+            }
+        }
+        catch (error) {
+            console.warn(`⚠️ Impossible de supprimer le fichier physique: ${error.message}`);
+        }
+        await this.filesRepository.remove(file);
+        console.log(`🗑️ Fichier supprimé de la base de données: ID ${id}`);
     }
     async incrementDownloadCount(id) {
         await this.filesRepository.increment({ id }, 'downloadCount', 1);
     }
     async getFilesByUserClass(userClass) {
-        return this.filesRepository.find({
-            where: {
-                targetClass: userClass,
-                isActive: true
-            },
+        const allFiles = await this.filesRepository.find({
+            where: { isActive: true },
             relations: ['uploader'],
             order: { createdAt: 'DESC' },
+        });
+        return allFiles.filter(file => {
+            if (file.targetClasses) {
+                try {
+                    let targetClasses = file.targetClasses;
+                    if (typeof targetClasses === 'string') {
+                        targetClasses = JSON.parse(targetClasses);
+                    }
+                    if (Array.isArray(targetClasses) && targetClasses.length > 0 && Array.isArray(targetClasses[0])) {
+                        targetClasses = targetClasses[0];
+                    }
+                    if (Array.isArray(targetClasses) && targetClasses.length > 0 && typeof targetClasses[0] === 'string' && targetClasses[0].startsWith('[')) {
+                        const innerParsed = JSON.parse(targetClasses[0]);
+                        if (Array.isArray(innerParsed)) {
+                            targetClasses = innerParsed;
+                        }
+                    }
+                    if (Array.isArray(targetClasses)) {
+                        return targetClasses.includes(userClass);
+                    }
+                }
+                catch (error) {
+                    console.warn(`Erreur parsing targetClasses pour fichier ${file.id}:`, error);
+                }
+            }
+            if (file.targetClass) {
+                try {
+                    const parsed = JSON.parse(file.targetClass);
+                    if (Array.isArray(parsed)) {
+                        return parsed.includes(userClass);
+                    }
+                }
+                catch (e) {
+                    return file.targetClass === userClass;
+                }
+                return file.targetClass === userClass;
+            }
+            return false;
         });
     }
     async getAvailableClasses() {

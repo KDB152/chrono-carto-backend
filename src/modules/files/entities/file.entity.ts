@@ -27,8 +27,11 @@ export class File {
   @Column({ name: 'file_size', type: 'bigint', comment: 'Taille du fichier en octets' })
   fileSize: number;
 
-  @Column({ name: 'target_class', type: 'varchar', length: 100, comment: 'Classe/groupe cible' })
+  @Column({ name: 'target_class', type: 'json', comment: 'Classe/groupe cible (ancien format)', nullable: true })
   targetClass: string;
+
+  @Column({ name: 'target_classes', type: 'json', comment: 'Classes/groupes cibles (array JSON)', nullable: true })
+  targetClasses: string[];
 
   @Column({ name: 'uploaded_by', type: 'int', comment: 'ID de l\'utilisateur qui a uploadé le fichier' })
   uploadedBy: number;

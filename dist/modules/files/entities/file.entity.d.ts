@@ -9,6 +9,7 @@ export declare class File {
     fileType: string;
     fileSize: number;
     targetClass: string;
+    targetClasses: string[];
     uploadedBy: number;
     isPublic: boolean;
     isActive: boolean;

@@ -19,8 +19,8 @@ const messaging_service_1 = require("./messaging.service");
 const create_conversation_dto_1 = require("./dto/create-conversation.dto");
 const send_message_dto_1 = require("./dto/send-message.dto");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
-const multer_1 = require("multer");
-const path_1 = require("path");
+const fs = require("fs");
+const path = require("path");
 let MessagingController = class MessagingController {
     constructor(messagingService) {
         this.messagingService = messagingService;
@@ -74,8 +74,67 @@ let MessagingController = class MessagingController {
     async test() {
         return { message: 'Messaging API is working!' };
     }
-    async uploadFile(file, body) {
-        return this.messagingService.uploadFile(file, body);
+    async uploadFile(file, req) {
+        if (!file) {
+            throw new Error('Aucun fichier fourni');
+        }
+        const userId = req.user?.id;
+        if (!userId) {
+            throw new Error('Utilisateur non authentifié');
+        }
+        return this.messagingService.uploadFile(file, userId);
+    }
+    async downloadFile(messageId, res, req) {
+        try {
+            const message = await this.messagingService.getMessage(parseInt(messageId));
+            if (!message || !message.file_path) {
+                return res.status(404).json({ error: 'Fichier non trouvé' });
+            }
+            const conversation = await this.messagingService.getConversation(message.conversation_id);
+            const userId = req.user?.id;
+            if (!conversation ||
+                (conversation.participant1_id !== userId && conversation.participant2_id !== userId)) {
+                return res.status(403).json({ error: 'Accès non autorisé' });
+            }
+            const filePath = path.join(process.cwd(), message.file_path);
+            if (!fs.existsSync(filePath)) {
+                return res.status(404).json({ error: 'Fichier non trouvé sur le serveur' });
+            }
+            const ext = path.extname(message.file_path).toLowerCase();
+            let contentType = 'application/octet-stream';
+            if (ext === '.pdf')
+                contentType = 'application/pdf';
+            else if (ext === '.jpg' || ext === '.jpeg')
+                contentType = 'image/jpeg';
+            else if (ext === '.png')
+                contentType = 'image/png';
+            else if (ext === '.gif')
+                contentType = 'image/gif';
+            else if (ext === '.mp4')
+                contentType = 'video/mp4';
+            else if (ext === '.mp3')
+                contentType = 'audio/mpeg';
+            else if (ext === '.doc')
+                contentType = 'application/msword';
+            else if (ext === '.docx')
+                contentType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            else if (ext === '.xls')
+                contentType = 'application/vnd.ms-excel';
+            else if (ext === '.xlsx')
+                contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+            const originalFileName = message.content || `fichier${ext}`;
+            res.setHeader('Content-Type', contentType);
+            res.setHeader('Content-Disposition', `attachment; filename="${originalFileName}"`);
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+            const fileStream = fs.createReadStream(filePath);
+            fileStream.pipe(res);
+        }
+        catch (error) {
+            console.error('Erreur lors du téléchargement:', error);
+            return res.status(500).json({ error: 'Erreur lors du téléchargement du fichier' });
+        }
     }
 };
 exports.MessagingController = MessagingController;
@@ -174,28 +233,29 @@ __decorate([
 ], MessagingController.prototype, "test", null);
 __decorate([
     (0, common_1.Post)('upload'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file', {
-        storage: (0, multer_1.diskStorage)({
-            destination: './uploads/messages',
-            filename: (req, file, cb) => {
-                const randomName = Array(32).fill(null)
-                    .map(() => Math.round(Math.random() * 16).toString(16)).join('');
-                return cb(null, `${randomName}${(0, path_1.extname)(file.originalname)}`);
-            }
-        }),
         limits: {
-            fileSize: 25 * 1024 * 1024
+            fileSize: 50 * 1024 * 1024
         }
     })),
     __param(0, (0, common_1.UploadedFile)()),
-    __param(1, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], MessagingController.prototype, "uploadFile", null);
+__decorate([
+    (0, common_1.Get)('download/:messageId'),
+    __param(0, (0, common_1.Param)('messageId')),
+    __param(1, (0, common_1.Res)()),
+    __param(2, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object, Object]),
+    __metadata("design:returntype", Promise)
+], MessagingController.prototype, "downloadFile", null);
 exports.MessagingController = MessagingController = __decorate([
     (0, common_1.Controller)('messaging'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
     __metadata("design:paramtypes", [messaging_service_1.MessagingService])
 ], MessagingController);
 //# sourceMappingURL=messaging.controller.js.map

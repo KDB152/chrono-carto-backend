@@ -3,4 +3,7 @@ export declare class SendMessageDto {
     senderId: number;
     content: string;
     messageType?: 'text' | 'image' | 'file' | 'audio';
+    filePath?: string;
+    fileName?: string;
+    fileType?: string;
 }

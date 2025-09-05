@@ -6,6 +6,7 @@ export declare class CreateFileDto {
     filePath: string;
     fileType: string;
     fileSize: number;
-    targetClass: string;
+    targetClass: string | string[];
+    targetClasses?: string[];
     isPublic?: boolean;
 }

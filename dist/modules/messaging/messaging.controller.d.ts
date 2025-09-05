@@ -1,6 +1,7 @@
 import { MessagingService } from './messaging.service';
 import { CreateConversationDto } from './dto/create-conversation.dto';
 import { SendMessageDto } from './dto/send-message.dto';
+import { Response } from 'express';
 export declare class MessagingController {
     private readonly messagingService;
     constructor(messagingService: MessagingService);
@@ -22,5 +23,12 @@ export declare class MessagingController {
     test(): Promise<{
         message: string;
     }>;
-    uploadFile(file: Express.Multer.File, body: any): Promise<import("./entities/message.entity").Message>;
+    uploadFile(file: Express.Multer.File, req: any): Promise<{
+        fileName: string;
+        storedName: string;
+        filePath: any;
+        fileType: string;
+        fileSize: number;
+    }>;
+    downloadFile(messageId: string, res: Response, req: any): Promise<Response<any, Record<string, any>>>;
 }

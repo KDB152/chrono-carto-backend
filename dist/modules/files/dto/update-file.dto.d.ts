@@ -1,5 +1,12 @@
-import { CreateFileDto } from './create-file.dto';
-declare const UpdateFileDto_base: import("@nestjs/mapped-types").MappedType<Partial<CreateFileDto>>;
-export declare class UpdateFileDto extends UpdateFileDto_base {
+export declare class UpdateFileDto {
+    title?: string;
+    description?: string;
+    fileName?: string;
+    storedName?: string;
+    filePath?: string;
+    fileType?: string;
+    fileSize?: number;
+    targetClass?: string;
+    targetClasses?: string[];
+    isPublic?: boolean;
 }
-export {};
